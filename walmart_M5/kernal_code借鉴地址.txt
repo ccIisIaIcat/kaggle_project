@@ -1,0 +1,5 @@
+for beginner ： 用之前28天的数据的均值取预测未来数据
+https://www.kaggle.com/code/chrisrichardmiles/simple-model-avg-last-28-days-grouped-by-weekday/notebook
+
+一些关于特征的处理：
+https://www.kaggle.com/code/kyakovlev/m5-simple-fe/notebook

@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 print("lll")
 
 #读取所需的文件
-cal = pd.read_csv("E:\\kaggle_data\\walmart\\calendar.csv")
-ss = pd.read_csv("E:\\kaggle_data\\walmart\\sample_submission.csv")
-stv = pd.read_csv("E:\\kaggle_data\\walmart\\sales_train_validation.csv")
+cal = pd.read_csv("E:\\kaggle_project\\kaggle_data\\walmart\\calendar.csv")
+ss = pd.read_csv("E:\\kaggle_project\\kaggle_data\\walmart\\sample_submission.csv")
+stv = pd.read_csv("E:\\kaggle_project\\kaggle_data\\walmart\\sales_train_validation.csv")
 
 
 #读取表最前面的id信息和最近28天的数据
@@ -57,7 +57,7 @@ submission['id'] = ss.id.values
 submission.columns = ['id'] + ['F' + str(i) for i in range(1,29)]
 
 #保存信息
-submission.to_csv('E:\\kaggle_data\\walmart\\answer\\submission.csv', index=False)
+submission.to_csv('E:\\kaggle_project\\kaggle_data\\walmart\\answer\\submission.csv', index=False)
 
 
 
