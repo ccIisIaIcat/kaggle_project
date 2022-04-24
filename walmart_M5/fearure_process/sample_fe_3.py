@@ -63,53 +63,58 @@ TARGET = 'sales'         # 主要的目标值
 END_TRAIN = 1913         # 训练集最后一天的id
 MAIN_INDEX = ['id','d']  # 确定数据的连接键
 
-#加载数据
-print('Load Main Data')
+print("load message...")
 
-#各项数据加载
-# train_df = pd.read_csv('E:\\kaggle_project\\kaggle_data\\walmart\\sales_train_validation.csv')
-prices_df = pd.read_csv('E:\\kaggle_project\\kaggle_data\\walmart\\sell_prices.csv')
 calendar_df = pd.read_csv('E:\\kaggle_project\\kaggle_data\\walmart\\calendar.csv')
-
-print('Prices')
-
-#获取一些价格的统计数据
-prices_df['price_max'] = prices_df.groupby(['store_id','item_id'])['sell_price'].transform('max')
-prices_df['price_min'] = prices_df.groupby(['store_id','item_id'])['sell_price'].transform('min')
-prices_df['price_std'] = prices_df.groupby(['store_id','item_id'])['sell_price'].transform('std')
-prices_df['price_mean'] = prices_df.groupby(['store_id','item_id'])['sell_price'].transform('mean')
-
-#对统计的价格做正则化处理
-prices_df['price_norm'] = prices_df['sell_price']/prices_df['price_max']
-
-#评估同一商店同一商品价格的波动（不同价格的个数）
-#和同一商店同一价格的不同商品个数
-prices_df['price_nunique'] = prices_df.groupby(['store_id','item_id'])['sell_price'].transform('nunique')
-prices_df['item_nunique'] = prices_df.groupby(['store_id','sell_price'])['item_id'].transform('nunique')
-
-#作者意图做一些回测信息，用到了calender里的一些属性
-calendar_prices = calendar_df[['wm_yr_wk','month','year']]#获取三列信息
-calendar_prices = calendar_prices.drop_duplicates(subset=['wm_yr_wk'])#去重
-prices_df = prices_df.merge(calendar_prices[['wm_yr_wk','month','year']], on=['wm_yr_wk'], how='left')#把月份和年的信息追加到prices_data后方
-del calendar_prices
-
-#之后就可以根据标签获得一些价格的动量信息
-prices_df['price_momentum'] = prices_df['sell_price']/prices_df.groupby(['store_id','item_id'])['sell_price'].transform(lambda x: x.shift(1))
-prices_df['price_momentum_m'] = prices_df['sell_price']/prices_df.groupby(['store_id','item_id','month'])['sell_price'].transform('mean')
-prices_df['price_momentum_y'] = prices_df['sell_price']/prices_df.groupby(['store_id','item_id','year'])['sell_price'].transform('mean')
-
-#把不用的列删除
-del prices_df['month'], prices_df['year']
-
-#把新的信息追加在grid_data后面并保存
 grid_df = pd.read_pickle('E:\\kaggle_project\\kaggle_data\\walmart\\tool_data\\grid_part_1.pkl')
 
-original_columns = list(grid_df)
-grid_df = grid_df.merge(prices_df, on=['store_id','item_id','wm_yr_wk'], how='left')
-keep_columns = [col for col in list(grid_df) if col not in original_columns]
-grid_df = grid_df[MAIN_INDEX+keep_columns]
-grid_df = reduce_mem_usage(grid_df)
+grid_df = grid_df[MAIN_INDEX]
 
-#保存为grid_part_2
-grid_df.to_pickle('E:\\kaggle_project\\kaggle_data\\walmart\\tool_data\\grid_part_2.pkl')
+icols = ['date',
+         'd',
+         'event_name_1',
+         'event_type_1',
+         'event_name_2',
+         'event_type_2',
+         'snap_CA',
+         'snap_TX',
+         'snap_WI']
+
+grid_df = grid_df.merge(calendar_df[icols], on=['d'], how='left')
+
+icols = ['event_name_1',
+         'event_type_1',
+         'event_name_2',
+         'event_type_2',
+         'snap_CA',
+         'snap_TX',
+         'snap_WI']
+
+for col in icols:
+    grid_df[col] = grid_df[col].astype('category')
+
+# 对日期信息内存进一步优化
+grid_df['date'] = pd.to_datetime(grid_df['date'])
+grid_df['tm_d'] = grid_df['date'].dt.day.astype(np.int8)
+grid_df['tm_w'] = grid_df['date'].dt.week.astype(np.int8)
+grid_df['tm_m'] = grid_df['date'].dt.month.astype(np.int8)
+grid_df['tm_y'] = grid_df['date'].dt.year
+grid_df['tm_y'] = (grid_df['tm_y'] - grid_df['tm_y'].min()).astype(np.int8)
+grid_df['tm_wm'] = grid_df['tm_d'].apply(lambda x: ceil(x/7)).astype(np.int8)
+grid_df['tm_dw'] = grid_df['date'].dt.dayofweek.astype(np.int8)
+grid_df['tm_w_end'] = (grid_df['tm_dw']>=5).astype(np.int8)
+
+# 删除不需要的信息
+del grid_df['date']
+
+print('Save part 3')
+
+print(grid_df.head())
+
+#存储这一部分
+grid_df.to_pickle('E:\\kaggle_project\\kaggle_data\\walmart\\tool_data\\grid_part_3.pkl')
 print('Size:', grid_df.shape)
+
+#删除不必要的内存
+del calendar_df
+del grid_df
