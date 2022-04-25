@@ -15,3 +15,4 @@
 
 5、把这些信息根据'store_id','item_id','wm_yr_wk'三个键连接到grid_df上
     操作细节：先保存grid_df原列表键，然后merge，之后取得新增的列，把grid_df保存为Main_index和新增列（此时该表不在保存销量信息）
+
