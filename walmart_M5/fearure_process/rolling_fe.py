@@ -47,12 +47,17 @@ temp_df = train_df[['id','d',TARGET]]
 LAG_DAYS = [col for col in range(1,8)]
 temp_df = train_df[['id','d',TARGET]]
 
+temp_df = train_df[['id','d',TARGET]]
+
 start_time = time.time()
-temp_df = temp_df.assign(**{
-        '{}_lag_{}'.format(col, l): temp_df.groupby(['id'])[col].transform(lambda x: x.shift(l))
-        for l in LAG_DAYS
-        for col in [TARGET]
-    })
+for i in range(1,8):
+    print('Shifting:', i)
+    temp_df['lag_'+str(i)] = temp_df.groupby(['id'])[TARGET].transform(lambda x: x.shift(i))
+    
+print('%0.2f min: Time for loops' % ((time.time() - start_time) / 60))
+
+start_time = time.time()
+temp_df = temp_df.assign(**{'{}_lag_{}'.format(col, l): temp_df.groupby(['id'])[col].transform(lambda x: x.shift(l))for l in LAG_DAYS for col in [TARGET]})
 print('%0.2f min: Time for bulk shift' % ((time.time() - start_time) / 60))
 
 #均值的回滚数据
@@ -64,8 +69,14 @@ for i in [14,30,60]:
     temp_df['rolling_std_'+str(i)]  = temp_df.groupby(['id'])[TARGET].transform(lambda x: x.shift(1).rolling(i).std())
 print('%0.2f min: Time for loop' % ((time.time() - start_time) / 60))
 
+print(temp_df.head())
+temp_df = temp_df.iloc[:,3:]
+print(temp_df.head())
+print(list(temp_df))
+
 from scipy import sparse 
 temp_matrix = sparse.csr_matrix(temp_df)
+print(temp_matrix)
 
 temp_matrix_restored = pd.DataFrame(temp_matrix.todense())
 restored_cols = ['roll_' + str(i) for i in list(temp_matrix_restored)]
