@@ -29,15 +29,26 @@ class score_judge():
     def process_submission_set(self):
         self.submission_dataframe["Date"] = pd.to_datetime(self.submission_dataframe["Date"],format='%Y-%m-%d')
         self.submission_dataframe =  self.submission_dataframe[(self.submission_dataframe["Rank"]<200) |  (self.submission_dataframe["Rank"]>=1800)]
+        self.submission_dataframe = pd.merge(self.submission_dataframe,self.judge_data,how='left',on=['Date','SecuritiesCode'])
 
-sub = pd.read_csv("kaggle_data\\JPX\\example_test_files\\sample_submission.csv")
-# s = score_judge('2002-4-26','2022-4-27',sub)
-# print(pd.to_datetime(s.start_test_date,format = '%Y-%m-%d')>pd.to_datetime(s.end_test_date,format = '%Y-%m-%d'))
-# s.test_function()
 
-def process_submission_set(submission_dataframe):
-        submission_dataframe["Date"] = pd.to_datetime(submission_dataframe["Date"],format='%Y-%m-%d')
-        submission_dataframe =  submission_dataframe[(submission_dataframe["Rank"]<200) | (submission_dataframe["Rank"]>=1800)]
-        print(submission_dataframe.groupby('Date')['Rank'].describe())
 
+
+# sub = pd.read_csv("kaggle_data\\JPX\\example_test_files\\sample_submission.csv")
+# # s = score_judge('2002-4-26','2022-4-27',sub)
+# # print(pd.to_datetime(s.start_test_date,format = '%Y-%m-%d')>pd.to_datetime(s.end_test_date,format = '%Y-%m-%d'))
+# # s.test_function()
+
+# def process_submission_set(submission_dataframe):
+#         submission_dataframe["Date"] = pd.to_datetime(submission_dataframe["Date"],format='%Y-%m-%d')
+#         submission_dataframe =  submission_dataframe[(submission_dataframe["Rank"]<200) | (submission_dataframe["Rank"]>=1800)]
+#         return submission_dataframe
+# judge_data = pd.read_csv("kaggle_data\\JPX\\train_files\\stock_prices.csv")
+# judge_data = judge_data[['Date','SecuritiesCode','Target']]
+# judge_data["Date"] = pd.to_datetime(judge_data["Date"],format='%Y-%m-%d')
+# aaa = process_submission_set(sub)
+# bbb=pd.merge(aaa,judge_data,how='left',on=['Date','SecuritiesCode'])
+# print(bbb)
 judge_data = pd.read_csv("kaggle_data\\JPX\\train_files\\stock_prices.csv")
+judge_data['tag'] = (judge_data['Close']-judge_data['Open'])/judge_data['Open']
+print(judge_data)
