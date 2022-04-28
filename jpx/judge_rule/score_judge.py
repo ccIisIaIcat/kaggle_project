@@ -1,9 +1,4 @@
 #编写一个根据提交的submission和已有的历史数据计算得分的脚本
-
-TOTAL_STOCK = 2000 #总体的股票个数
-FIRST_DATE = '2017-01-04' #测试集第一天的数据
-END_DATE = '2021-12-03' #测试最后一天的数据
-
 #为方便测试，每次计算需要提交预测开始日期和结束日期
 import pandas as pd
 import warnings
@@ -28,6 +23,7 @@ class score_judge():
         self.judge_data["Date"] = pd.to_datetime(self.judge_data["Date"],format='%Y-%m-%d') 
         self.judge_data = self.judge_data[(self.judge_data["Date"]>=self.start_test_date) & (self.judge_data["Date"]<=self.end_test_date)]
     def process_submission_set(self):
+        print("process_submission_set")
         self.submission_dataframe["Date"] = pd.to_datetime(self.submission_dataframe["Date"],format='%Y-%m-%d')
         self.submission_dataframe = pd.merge(self.submission_dataframe,self.judge_data,how='left',on=['Date','SecuritiesCode'])
         data_frame_up = self.submission_dataframe[self.submission_dataframe["Rank"]<200]
@@ -39,8 +35,19 @@ class score_judge():
         return self.data_series.mean()/self.data_series.std()
 
 
-sample_submission = pd.read_csv("kaggle_data\\JPX\\example_test_files\\tool_sample.csv")
-s = score_judge('2020-12-04','2020-12-09',sample_submission)
-print(s.score())
+import numpy as np
+import pandas as pd
 
 
+def calc_spread_return_sharpe(df: pd.DataFrame, portfolio_size: int = 200, toprank_weight_ratio: float = 2) -> float:
+    def _calc_spread_return_per_day(df, portfolio_size, toprank_weight_ratio):
+        assert df['Rank'].min() == 0
+        assert df['Rank'].max() == len(df['Rank']) - 1
+        weights = np.linspace(start=toprank_weight_ratio, stop=1, num=portfolio_size)
+        purchase = (df.sort_values(by='Rank')['Target'][:portfolio_size] * weights).sum() / weights.mean()
+        short = (df.sort_values(by='Rank', ascending=False)['Target'][:portfolio_size] * weights).sum() / weights.mean()
+        return purchase - short
+
+    buf = df.groupby('Date').apply(_calc_spread_return_per_day, portfolio_size, toprank_weight_ratio)
+    sharpe_ratio = buf.mean() / buf.std()
+    return sharpe_ratio
