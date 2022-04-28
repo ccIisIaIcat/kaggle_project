@@ -40,4 +40,4 @@ def process_submission_set(submission_dataframe):
         submission_dataframe =  submission_dataframe[(submission_dataframe["Rank"]<200) | (submission_dataframe["Rank"]>=1800)]
         print(submission_dataframe.groupby('Date')['Rank'].describe())
 
-process_submission_set(sub)
+judge_data = pd.read_csv("kaggle_data\\JPX\\train_files\\stock_prices.csv")
