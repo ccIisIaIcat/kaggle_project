@@ -30,6 +30,12 @@ def adjuster(ff, step=1, offset=95, cap=11.4):
         new_score = calc_spread_return_per_day(ff)
         if cap >= new_score:
             return ff.Rank.values
-df = pd.read_csv('../input/jpx-tokyo-stock-exchange-prediction/supplemental_files/stock_prices.csv', parse_dates=["Date"])
+df = pd.read_csv('kaggle_data\\JPX\\example_test_files\\stock_prices.csv', parse_dates=["Date"])
 df = add_rank(df)
 df = df.sort_values(["Date", "Rank"])
+
+for date in df.Date.unique():
+    df.loc[df.Date==date, "Rank"] = adjuster(df[df.Date==date])
+
+_, buf = calc_spread_return_sharpe(df)
+print(buf.mean(), buf.std(), buf.mean() / buf.std(), buf.min(), buf.max())
