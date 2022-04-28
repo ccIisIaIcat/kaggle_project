@@ -16,26 +16,12 @@ def calc_spread_return_sharpe(df: pd.DataFrame, portfolio_size=200, toprank_weig
     sharpe_ratio = buf.mean() / buf.std()
     return sharpe_ratio, buf
 
-def add_rank(df):
-    df["Rank"] = df.groupby("Date")["Target"].rank(ascending=False, method="first") - 1 
-    df["Rank"] = df["Rank"].astype("int")
-    return df
+df = pd.read_csv('kaggle_data\\JPX\\supplemental_files\\stock_prices.csv', parse_dates=["Date"])
+df = df[['Date','SecuritiesCode','Target']]
+data_day_1 = df[df['Date'] == '2021-12-06']
+data_day_2 = df[df['Date'] == '2021-12-07']
+data_day_3 = df[df['Date'] == '2021-12-08']
+print(data_day_1,data_day_2,data_day_3)
 
-def adjuster(ff, step=1, offset=95, cap=11.4):
-    org_score = calc_spread_return_per_day(ff)
-    if cap >= org_score: return ff.Rank.values
-    for i in range(0, 2000, step):
-        f, l = ff.index[i], ff.index[i+offset]
-        ff.loc[f, "Rank"], ff.loc[l, "Rank"] = ff.loc[l, "Rank"], ff.loc[f, "Rank"]
-        new_score = calc_spread_return_per_day(ff)
-        if cap >= new_score:
-            return ff.Rank.values
-df = pd.read_csv('kaggle_data\\JPX\\example_test_files\\stock_prices.csv', parse_dates=["Date"])
-df = add_rank(df)
-df = df.sort_values(["Date", "Rank"])
 
-for date in df.Date.unique():
-    df.loc[df.Date==date, "Rank"] = adjuster(df[df.Date==date])
 
-_, buf = calc_spread_return_sharpe(df)
-print(buf.mean(), buf.std(), buf.mean() / buf.std(), buf.min(), buf.max())
