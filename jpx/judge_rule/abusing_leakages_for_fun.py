@@ -25,22 +25,41 @@ def add_rank(df):
 df = pd.read_csv('kaggle_data\\JPX\\supplemental_files\\stock_prices.csv', parse_dates=["Date"])
 df = df[['Date','SecuritiesCode','Target']]
 data_day_1 = df[(df['Date'] == '2021-12-06')].reset_index(drop=True)
-# data_day_1 = add_rank(df)
+data_day_1 = add_rank(data_day_1)
 # print(calc_spread_return_sharpe(data_day_1))
 
 def change_rank(df,value):
     n = len(df)-1
     temp_value = calc_spread_return_per_day(df)
     while(temp_value>value):
-        a1 = randint(0,n)
-        a2 = randint(0,n)
-        df[df['Rank']==a1]['Rank'] = a2
-        df[df['Rank']==a2]['Rank'] = a1
+        a1 = randint(0,200)
+        a2 = randint(n-200,n)
+        df['Rank'].loc[df['Rank']==a1] = a2
+        df['Rank'].loc[df['Rank']==a2] = a1
         temp_value = calc_spread_return_per_day(df)
         print(temp_value)
     return df
 
-change_rank
+def change_data(df,value):
+    df = add_rank(df)
+    answer = pd.DataFrame
+    data_list = df['Date'].drop_duplicates()
+    id = 0
+    for data_ in data_list:
+        print(id)
+        temp_data = df[df['Date']==data_]
+        temp_data = change_rank(temp_data,value)
+        if id == 0:
+            answer = temp_data
+        else:
+            answer=pd.concat([answer,temp_data],axis=0,ignore_index=True)
+        id += 1
+
+    return answer
+
+new_data = change_data(df,11)
+print(calc_spread_return_sharpe(new_data))
+
 
 
 
