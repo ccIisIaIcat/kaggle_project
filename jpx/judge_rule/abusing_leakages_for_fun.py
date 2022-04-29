@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from warnings import filterwarnings
+from random import randint
 filterwarnings("ignore")
 
 def calc_spread_return_per_day(df, portfolio_size=200, toprank_weight_ratio=2):
@@ -23,11 +24,23 @@ def add_rank(df):
 
 df = pd.read_csv('kaggle_data\\JPX\\supplemental_files\\stock_prices.csv', parse_dates=["Date"])
 df = df[['Date','SecuritiesCode','Target']]
-# data_day_1 = df[(df['Date'] == '2021-12-06')|(df['Date'] == '2021-12-07')].reset_index(drop=True)
-data_day_1 = add_rank(df)
-print(calc_spread_return_sharpe(data_day_1))
+data_day_1 = df[(df['Date'] == '2021-12-06')].reset_index(drop=True)
+# data_day_1 = add_rank(df)
+# print(calc_spread_return_sharpe(data_day_1))
 
-# def get_most_rank(df,value):
+def change_rank(df,value):
+    n = len(df)-1
+    temp_value = calc_spread_return_per_day(df)
+    while(temp_value>value):
+        a1 = randint(0,n)
+        a2 = randint(0,n)
+        df[df['Rank']==a1]['Rank'] = a2
+        df[df['Rank']==a2]['Rank'] = a1
+        temp_value = calc_spread_return_per_day(df)
+        print(temp_value)
+    return df
+
+change_rank
 
 
 
