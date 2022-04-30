@@ -17,25 +17,39 @@ data['lowest_reduce'] = (data['Open']-data['Low'])/data['Open']
 data['change_ration'] = (data['High']-data['Low'])/data['Low']
 data = data[['RowId', 'Date', 'SecuritiesCode','Target', 'incress_ratio', 'highest_incress', 'lowest_reduce','change_ration']]
 gap = int(len(data)/100)
-id_list = np.linspace(start = 0, stop = len(data), num = 100)
+id_list = np.linspace(start = 0, stop = len(data)-gap*2, num = 10)
 end_position = int(len(data)/100)
-
+date_list = []
+for i in id_list:
+    date_list.append([data.loc[int(i)]['Date'],data.loc[int(i)+gap]['Date']])
 r1_list = []
 r2_list = []
 r3_list = []
 r4_list = []
 
-for i in id_list:
-    end_position += gap
-    print(int(i),end_position)
-    new_data = data[(int(data['RowId'])>int(i)) & (int(data['RowId'])<end_position)]
+for i in range(len(date_list)):
+    new_data = data[(data['Date']>date_list[i][0]) & (data['Date']<date_list[i][1])]
     r_list = get_ratio(new_data)
+    print(i)
     r1_list.append(r_list[0])
     r2_list.append(r_list[1])
     r3_list.append(r_list[2])
     r4_list.append(r_list[3])
 
-tool_list = np.linspace(start = 0, stop = 99, num = 100)
+
+# for i in id_list:
+#     end_position += gap
+#     new_data = data[(data.index.to_list()[0]>int(i)) & (data.index.to_list()[0]<end_position)]
+#     print(new_data)
+#     r_list = get_ratio(new_data)
+#     r1_list.append(r_list[0])
+#     r2_list.append(r_list[1])
+#     r3_list.append(r_list[2])
+#     r4_list.append(r_list[3])
+
+
+
+tool_list = np.linspace(start = 0, stop = len(r1_list)-1, num = len(r1_list))
 plt.plot(tool_list,r1_list)
 plt.plot(tool_list,r2_list)
 plt.plot(tool_list,r3_list)
