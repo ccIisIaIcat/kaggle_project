@@ -17,8 +17,7 @@ data['lowest_reduce'] = (data['Open']-data['Low'])/data['Open']
 data['change_ration'] = (data['High']-data['Low'])/data['Low']
 data = data[['RowId', 'Date', 'SecuritiesCode','Target', 'incress_ratio', 'highest_incress', 'lowest_reduce','change_ration']]
 gap = int(len(data)/100)
-id_list = np.linspace(start = 0, stop = len(data)-gap*2, num = 10)
-end_position = int(len(data)/100)
+id_list = np.linspace(start = 0, stop = len(data)-gap*2, num = 400)
 date_list = []
 for i in id_list:
     date_list.append([data.loc[int(i)]['Date'],data.loc[int(i)+gap]['Date']])
