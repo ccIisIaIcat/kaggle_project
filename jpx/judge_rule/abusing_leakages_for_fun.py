@@ -32,14 +32,22 @@ def change_rank(df,value):
     n = len(df)-1
     df = add_rank(df)
     temp_value = calc_spread_return_per_day(df)
-    while(temp_value>value):
-        a1 = randint(0,200)
-        a2 = randint(n-200,n)
+    gap = 100
+    while(gap > 0.00007):
+        a1 = randint(0,n)
+        a2 = randint(0,n)
         index_1 = df[df['Rank']==a1].index.tolist()[0] 
         index_2 = df[df['Rank']==a2].index.tolist()[0]
         df['Rank'].loc[index_1] = a2
         df['Rank'].loc[index_2] = a1
         temp_value = calc_spread_return_per_day(df)
+        if abs(temp_value-value)<gap:
+            gap = abs(temp_value-value)
+        else:
+            index_1 = df[df['Rank']==a1].index.tolist()[0] 
+            index_2 = df[df['Rank']==a2].index.tolist()[0]
+            df['Rank'].loc[index_1] = a2
+            df['Rank'].loc[index_2] = a1
     return df
 
 def change_data(df,value):
@@ -58,7 +66,7 @@ def change_data(df,value):
 
     return answer
 
-new_data = change_data(df,11.355)
+new_data = change_data(df,11.3)
 print(calc_spread_return_sharpe(new_data))
 
 
