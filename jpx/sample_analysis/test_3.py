@@ -20,4 +20,5 @@ X = data[[ 'incress_ratio', 'highest_incress', 'lowest_reduce','change_ration','
 y = data[[ 'Target']]
 print(list(data))
 X_train,X_test, y_train, y_test =train_test_split(X,y,test_size=0.4, random_state=0)
+##
 
