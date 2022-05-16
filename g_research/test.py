@@ -160,3 +160,13 @@ def get_features(df, train=True):
 
 feat = get_features(train_merged)
 print(feat)
+
+# 构造训练集，去掉不需要的信息
+not_use_features_train = ['timestamp', 'train_flg']
+for id in range(14):
+    not_use_features_train.append(f'Target_{id}')
+
+features = feat.columns 
+features = features.drop(not_use_features_train)
+features = list(features)
+
