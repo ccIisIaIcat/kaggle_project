@@ -25,7 +25,7 @@ ASSET_DETAILS_CSV = 'kaggle_data/g_research/asset_details.csv'
 pd.set_option('display.max_rows', 6)
 pd.set_option('display.max_columns', 350)
 
-lags = [60,300,900] #暂时也不知道干嘛的
+lags = [60,300,900] #暂时也不知道干嘛的(是用于构建回滚特征的)
 
 #提升树的参数设定
 params = {
@@ -292,7 +292,6 @@ def get_Xy_and_model_for_asset(df_proc, asset_id):
                                   df_proc.loc[test_split_index, f'Target_{asset_id}'].values, 
                                   feature_name = features, 
                                  )
-
         print(f"number of train data: {len(df_proc.loc[train_split_index])}")
         print(f"number of val data:   {len(df_proc.loc[test_split_index])}")
 
@@ -313,7 +312,6 @@ def get_Xy_and_model_for_asset(df_proc, asset_id):
             
         oof_pred += list(  model.predict(df_proc.loc[test_split_index, features])        )
         oof_valid += list(   df_proc.loc[test_split_index, f'Target_{asset_id}'].values    )
-    
     
     plot_importance(np.array(importances),features, PLOT_TOP_N = 20, figsize=(10, 5))
 
