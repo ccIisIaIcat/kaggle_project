@@ -170,3 +170,174 @@ features = feat.columns
 features = features.drop(not_use_features_train)
 features = list(features)
 
+#做一些内存处理
+del train_merged
+del df_train
+gc.collect()
+
+# 一个获取相关性的函数，具体是算什么的还不太了解
+# 这是作者自定义的损失函数，用于后续模型的计算，牛啊
+def correlation(a, train_data):
+    
+    b = train_data.get_label()
+    
+    a = np.ravel(a)
+    b = np.ravel(b)
+
+    len_data = len(a)
+    mean_a = np.sum(a) / len_data
+    mean_b = np.sum(b) / len_data
+    var_a = np.sum(np.square(a - mean_a)) / len_data
+    var_b = np.sum(np.square(b - mean_b)) / len_data
+
+    cov = np.sum((a * b))/len_data - mean_a*mean_b
+    corr = cov / np.sqrt(var_a * var_b)
+
+    return 'corr', corr, True
+# 注意事项：1、自定义的损失函数接受两个参数；第一个是模型预测值，第二个是数据集数据类型，
+# 传入验证数据集；2、返回值有三个：eval_name(字符串，随意起名), eval_result, is_higher_better(bool类型)
+
+def corr_score(pred, valid):
+    len_data = len(pred)
+    mean_pred = np.sum(pred) / len_data
+    mean_valid = np.sum(valid) / len_data
+    var_pred = np.sum(np.square(pred - mean_pred)) / len_data
+    var_valid = np.sum(np.square(valid - mean_valid)) / len_data
+
+    cov = np.sum((pred * valid))/len_data - mean_pred*mean_valid
+    corr = cov / np.sqrt(var_pred * var_valid)
+
+    return corr
+
+def wcorr_score(pred, valid, weight):
+    len_data = len(pred)
+    sum_w = np.sum(weight)
+    mean_pred = np.sum(pred * weight) / sum_w
+    mean_valid = np.sum(valid * weight) / sum_w
+    var_pred = np.sum(weight * np.square(pred - mean_pred)) / sum_w
+    var_valid = np.sum(weight * np.square(valid - mean_valid)) / sum_w
+
+    cov = np.sum((pred * valid * weight)) / sum_w - mean_pred*mean_valid
+    corr = cov / np.sqrt(var_pred * var_valid)
+
+    return corr
+
+#一个绘图函数
+def plot_importance(importances, features_names = features, PLOT_TOP_N = 20, figsize=(10, 10)):
+    importance_df = pd.DataFrame(data=importances, columns=features)
+    sorted_indices = importance_df.median(axis=0).sort_values(ascending=False).index
+    sorted_importance_df = importance_df.loc[:, sorted_indices]
+    plot_cols = sorted_importance_df.columns[:PLOT_TOP_N]
+    _, ax = plt.subplots(figsize=figsize)
+    ax.grid()
+    ax.set_xscale('log')
+    ax.set_ylabel('Feature')
+    ax.set_xlabel('Importance')
+    sns.boxplot(data=sorted_importance_df[plot_cols],
+                orient='h',
+                ax=ax)
+    plt.show()
+
+# 一个用于交叉验证的函数
+def get_time_series_cross_val_splits(data, cv = n_fold, embargo = 3750):
+    all_train_timestamps = data['timestamp'].unique()
+    len_split = len(all_train_timestamps) // cv
+    test_splits = [all_train_timestamps[i * len_split:(i + 1) * len_split] for i in range(cv)]
+    # fix the last test split to have all the last timestamps, in case the number of timestamps wasn't divisible by cv
+    rem = len(all_train_timestamps) - len_split*cv
+    if rem>0:
+        test_splits[-1] = np.append(test_splits[-1], all_train_timestamps[-rem:])
+
+    train_splits = []
+    for test_split in test_splits:
+        test_split_max = int(np.max(test_split))
+        test_split_min = int(np.min(test_split))
+        # get all of the timestamps that aren't in the test split
+        train_split_not_embargoed = [e for e in all_train_timestamps if not (test_split_min <= int(e) <= test_split_max)]
+        # embargo the train split so we have no leakage. Note timestamps are expressed in seconds, so multiply by 60
+        embargo_sec = 60*embargo
+        train_split = [e for e in train_split_not_embargoed if
+                       abs(int(e) - test_split_max) > embargo_sec and abs(int(e) - test_split_min) > embargo_sec]
+        train_splits.append(train_split)
+
+    # convenient way to iterate over train and test splits
+    train_test_zip = zip(train_splits, test_splits)
+    return train_test_zip
+
+def get_Xy_and_model_for_asset(df_proc, asset_id):
+    df_proc = df_proc.loc[  (df_proc[f'Target_{asset_id}'] == df_proc[f'Target_{asset_id}'])  ]
+    if not_use_overlap_to_train:
+        df_proc = df_proc.loc[  (df_proc['train_flg'] == 1)  ]
+    
+# EmbargoCV
+    train_test_zip = get_time_series_cross_val_splits(df_proc, cv = n_fold, embargo = 3750)
+    print("entering time series cross validation loop")
+    importances = []
+    oof_pred = []
+    oof_valid = []
+        
+    for split, train_test_split in enumerate(train_test_zip):
+        gc.collect()
+        
+        print(f"doing split {split+1} out of {n_fold}")
+        train_split, test_split = train_test_split
+        train_split_index = df_proc['timestamp'].isin(train_split)
+        test_split_index = df_proc['timestamp'].isin(test_split)
+    
+        train_dataset = lgb.Dataset(df_proc.loc[train_split_index, features],
+                                    df_proc.loc[train_split_index, f'Target_{asset_id}'].values, 
+                                    feature_name = features, 
+                                   )
+        val_dataset = lgb.Dataset(df_proc.loc[test_split_index, features], 
+                                  df_proc.loc[test_split_index, f'Target_{asset_id}'].values, 
+                                  feature_name = features, 
+                                 )
+
+        print(f"number of train data: {len(df_proc.loc[train_split_index])}")
+        print(f"number of val data:   {len(df_proc.loc[test_split_index])}")
+
+        model = lgb.train(params = params,
+                          train_set = train_dataset, 
+                          valid_sets=[train_dataset, val_dataset],
+                          valid_names=['tr', 'vl'],
+                          num_boost_round = 5000,
+                          verbose_eval = 100,     
+                          feval = correlation,
+                         )
+        importances.append(model.feature_importance(importance_type='gain'))
+        
+        file = f'trained_model_id{asset_id}_fold{split}.pkl'
+        pickle.dump(model, open(file, 'wb'))
+        print(f"Trained model was saved to 'trained_model_id{asset_id}_fold{split}.pkl'")
+        print("")
+            
+        oof_pred += list(  model.predict(df_proc.loc[test_split_index, features])        )
+        oof_valid += list(   df_proc.loc[test_split_index, f'Target_{asset_id}'].values    )
+    
+    
+    plot_importance(np.array(importances),features, PLOT_TOP_N = 20, figsize=(10, 5))
+
+    return oof_pred, oof_valid
+
+oof = [ [] for id in range(14)   ]
+
+all_oof_pred = []
+all_oof_valid = []
+all_oof_weight = []
+
+for asset_id, asset_name in zip(df_asset_details['Asset_ID'], df_asset_details['Asset_Name']):
+    print(f"Training model for {asset_name:<16} (ID={asset_id:<2})")
+    
+    oof_pred, oof_valid = get_Xy_and_model_for_asset(feat, asset_id)
+    
+    weight_temp = float( df_asset_details.loc[  df_asset_details['Asset_ID'] == asset_id  , 'Weight'   ]  )
+    
+    all_oof_pred += oof_pred
+    all_oof_valid += oof_valid
+    all_oof_weight += [weight_temp] * len(oof_pred)
+    
+    oof[asset_id] = corr_score(     np.array(oof_pred)   ,    np.array(oof_valid)    )
+    
+    print(f'OOF corr score of {asset_name} (ID={asset_id}) is {oof[asset_id]:.5f}. (Weight: {float(weight_temp):.5f})')
+    print('')
+    print('')
