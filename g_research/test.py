@@ -279,7 +279,9 @@ def get_time_series_cross_val_splits(data, cv = n_fold, embargo = 3750):
     train_test_zip = zip(train_splits, test_splits)
     return train_test_zip
 
+# 应该是根据划分的区间训练数据获得信息
 def get_Xy_and_model_for_asset(df_proc, asset_id):
+    # 这几行说实话没太看懂
     df_proc = df_proc.loc[  (df_proc[f'Target_{asset_id}'] == df_proc[f'Target_{asset_id}'])  ]
     if not_use_overlap_to_train:
         df_proc = df_proc.loc[  (df_proc['train_flg'] == 1)  ]
