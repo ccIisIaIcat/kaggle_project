@@ -196,7 +196,10 @@ def correlation(a, train_data):
     return 'corr', corr, True
 # 注意事项：1、自定义的损失函数接受两个参数；第一个是模型预测值，第二个是数据集数据类型，
 # 传入验证数据集；2、返回值有三个：eval_name(字符串，随意起名), eval_result, is_higher_better(bool类型)
+# 该自定义损失函数好像并不会影响原收敛过程，要重新获得梯度和hash需要fobj一项
 
+
+#用于获取两列的相关系数
 def corr_score(pred, valid):
     len_data = len(pred)
     mean_pred = np.sum(pred) / len_data
@@ -209,6 +212,7 @@ def corr_score(pred, valid):
 
     return corr
 
+#用于获取加权相关系数
 def wcorr_score(pred, valid, weight):
     len_data = len(pred)
     sum_w = np.sum(weight)
@@ -223,9 +227,11 @@ def wcorr_score(pred, valid, weight):
     return corr
 
 #一个绘图函数
+#应该和不同参考标准的重要性相关
 def plot_importance(importances, features_names = features, PLOT_TOP_N = 20, figsize=(10, 10)):
-    importance_df = pd.DataFrame(data=importances, columns=features)
+    importance_df = pd.DataFrame(data=importances, columns=features) #声明一个和重要性有关的dataframe
     sorted_indices = importance_df.median(axis=0).sort_values(ascending=False).index
+    # 应该是对特征的重要性进行一个排序吧
     sorted_importance_df = importance_df.loc[:, sorted_indices]
     plot_cols = sorted_importance_df.columns[:PLOT_TOP_N]
     _, ax = plt.subplots(figsize=figsize)
@@ -240,27 +246,36 @@ def plot_importance(importances, features_names = features, PLOT_TOP_N = 20, fig
 
 # 一个用于交叉验证的函数
 def get_time_series_cross_val_splits(data, cv = n_fold, embargo = 3750):
+    # 获取所有不同的时间戳
     all_train_timestamps = data['timestamp'].unique()
+    # 计算每一个分集合应该包含的长度
     len_split = len(all_train_timestamps) // cv
+    # 按照划分的区间长度定义每一个区间的收尾
     test_splits = [all_train_timestamps[i * len_split:(i + 1) * len_split] for i in range(cv)]
     # fix the last test split to have all the last timestamps, in case the number of timestamps wasn't divisible by cv
+    # 一个小细节处理，如果整个序列长度没有被cv平分，把剩下的加到最后一组中，个人认为不是很必要
     rem = len(all_train_timestamps) - len_split*cv
     if rem>0:
         test_splits[-1] = np.append(test_splits[-1], all_train_timestamps[-rem:])
 
     train_splits = []
+    # 对于测试划分集中的每一组
     for test_split in test_splits:
+        # 找到每一组的最小日期和最大日期
         test_split_max = int(np.max(test_split))
         test_split_min = int(np.min(test_split))
         # get all of the timestamps that aren't in the test split
+        # 找出所有不在测试集内的时间戳
         train_split_not_embargoed = [e for e in all_train_timestamps if not (test_split_min <= int(e) <= test_split_max)]
         # embargo the train split so we have no leakage. Note timestamps are expressed in seconds, so multiply by 60
+        # 为了防止信息leakage，从这些新的信息中，选取在embargo范围之外的点作为训练集
         embargo_sec = 60*embargo
         train_split = [e for e in train_split_not_embargoed if
                        abs(int(e) - test_split_max) > embargo_sec and abs(int(e) - test_split_min) > embargo_sec]
         train_splits.append(train_split)
 
     # convenient way to iterate over train and test splits
+    # zip成训练集测试集组元对
     train_test_zip = zip(train_splits, test_splits)
     return train_test_zip
 
@@ -268,7 +283,6 @@ def get_Xy_and_model_for_asset(df_proc, asset_id):
     df_proc = df_proc.loc[  (df_proc[f'Target_{asset_id}'] == df_proc[f'Target_{asset_id}'])  ]
     if not_use_overlap_to_train:
         df_proc = df_proc.loc[  (df_proc['train_flg'] == 1)  ]
-    
 # EmbargoCV
     train_test_zip = get_time_series_cross_val_splits(df_proc, cv = n_fold, embargo = 3750)
     print("entering time series cross validation loop")

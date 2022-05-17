@@ -47,13 +47,28 @@ x_train,x_test,y_train,y_test = train_test_split(x_data,y_data,test_size = 0.3,r
 train_dataset = lgb.Dataset(x_train,y_train)
 val_dataset = lgb.Dataset(x_test,y_test,reference=train_dataset)
 
+def judge_function(a,train_data):
+    b = train_data.get_label()
+    a = np.ravel(a)
+    b = np.ravel(b)
+    answer = abs((b-a)/b)
+    answer = answer.mean()
+    return 'diff',answer, True
+
+def loglikelood(preds, train_data):
+    labels = train_data.get_label()
+    preds = 1. / (1. + np.exp(-preds))
+    grad = preds - labels
+    hess = preds * (1. - preds)
+    return grad, hess
+
 model = lgb.train(params = params,
                           train_set = train_dataset, 
                           valid_sets=[train_dataset, val_dataset],
                           valid_names=['tr', 'vl'],
                           num_boost_round = 5000,
-                          verbose_eval = 100,     
-                        #   feval = correlation,
+                          verbose_eval = 100,   
+                          feval = judge_function,
                          )
 
 new_test_val = pd.read_csv('kaggle_data/price_predict/TestData.csv')
@@ -62,6 +77,7 @@ new_test_judge = pd.read_csv('kaggle_data/price_predict/result.csv')
 new_test_judge = new_test_judge[['PRICE']]
 answer = model.predict(new_test_val)
 new_test_judge['compare'] = answer
-new_test_judge['diff'] = (new_test_judge['PRICE']-new_test_judge['compare'])/new_test_judge['PRICE']
-print(new_test_judge)
+new_test_judge['diff'] = abs((new_test_judge['PRICE']-new_test_judge['compare'])/new_test_judge['PRICE'])
+print(new_test_judge['diff'].mean())
+
 
