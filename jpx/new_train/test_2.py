@@ -3,21 +3,17 @@ import numpy as np
 
 train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
 
-print(list(train_data_price))
 
-train_data_price['log_change'] = np.log(train_data_price['Close'])-np.log(train_data_price['Open'])
-train_data_price = train_data_price[['Date','SecuritiesCode','log_change','Target']]
+train_data_price = train_data_price[['Date','SecuritiesCode','Open','Close','Target']]
 
-lag_list_ = [1,2,3,4]
+lag_list_ = [1,2,3,5]
 
 def get_lag_info(train_data,lag_list):
     for lag_length in lag_list:
-        print(lag_length)
-        train_data[f'lag_{lag_length}_lochg'] = train_data.groupby(['SecuritiesCode'])['log_change'].transform(lambda x: x)
-        for i in range(lag_length-1):
-            print("i:",i)
-            train_data[f'lag_{lag_length}_lochg'] = train_data.groupby(['SecuritiesCode'])[f'lag_{lag_length}_lochg'].transform(lambda x: x+x.shift(i+1))
+        train_data[f'lag_{lag_length}_info'] = train_data.groupby(['SecuritiesCode'])['Open'].shift(lag_length-1)
+        train_data[f'lag_{lag_length}_info'] = (train_data['Close']-train_data[f'lag_{lag_length}_info'])/train_data[f'lag_{lag_length}_info']
     return train_data
+
 
 train_data_price = get_lag_info(train_data_price,lag_list_)
 
