@@ -25,7 +25,10 @@ def get_lag_info(train_data,lag_list):
 
 # train_data_price = get_lag_info(train_data_price,lag_list_)
 
-def get_date_divide(date_list,k_folds):
+def get_date_divide(date_list,k_folds, overlap_ratio):
+    single_length = int(len(date_list)/(1-overlap_ratio)) // k_folds
+    gap_size = int(single_length*overlap_ratio)
+
 
     return 0
 
