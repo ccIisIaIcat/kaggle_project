@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import lightgbm as lgb
 import matplotlib.pyplot as plt
-
+from sklearn import preprocessing
 
 LAG_LIST = [1,2,3,4,8,16,25,32,48,56,64,78,90] #lag信息序列
 K_FOLDS = 1 #测试集个数
@@ -36,12 +36,15 @@ params = {
     "first_metric_only": True
     }
 
+lbl = preprocessing.LabelEncoder()
+
 train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
 train_data_price = train_data_price[['Date','SecuritiesCode','Open','Close','Target']]
 stock_info = pd.read_csv('kaggle_data/JPX/stock_list.csv')
 stock_info = stock_info[['SecuritiesCode','17SectorCode']]
+stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(str))
+stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(int))
 train_data_price = pd.merge(train_data_price,stock_info,how='left',on='SecuritiesCode')
-print(train_data_price)
 
 
 def get_date_divide(date_list,k_folds, overlap_ratio,test_data_ratio):
