@@ -14,7 +14,6 @@ params = {
     'early_stopping_rounds': 100,
     'objective': 'regression',
     'metric': 'rmse',
-#     'metric': 'None',
     'boosting_type': 'gbdt',
     'max_depth': 5,
     'verbose': -1,
