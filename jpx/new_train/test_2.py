@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 
 LAG_LIST = [1,2,3,4,8,16,25,32,48,56,64,78,90] #lag信息序列
-K_FOLDS = 7 #测试集个数
-OVERLAP_RATIO = 0.3 #cv测试集覆盖比率
+K_FOLDS = 1 #测试集个数
+OVERLAP_RATIO = 0.05 #cv测试集覆盖比率
 TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 seed0 = 8586 #随机种子
 #提升树的参数设定
@@ -127,33 +127,24 @@ name_list = []
 for i in range(K_FOLDS):
     tool_set.append(i+1)
     name_list.append(f'num_{i+1}')
-
 tool_set_2 = []
 for i in range(len(LAG_LIST)+1):
     tool_set_2.append(i+1)
 
-
-print(features_importance)
-
-print(list(train_data))
-
-def compare_importance(list_):
-    sum_ = list_.sum()
-    list_ = list_/sum_
-    return list_
-
+lala = np.array(ratio_set)
+lala_2 = np.array(random_ratio_set)
 
 for i in range(K_FOLDS):
-    plt.plot(tool_set_2,compare_importance(features_importance[i]) )
+    plt.plot(tool_set_2,features_importance[i])
 plt.legend(name_list)
 plt.show()
 plt.plot(tool_set,ratio_set)
 plt.plot(tool_set,random_ratio_set)
 plt.legend(['predict','Random'])
+print(lala.mean())
+print(lala_2.mean())
 plt.show()
 
 
-# new_list = train_data_price[train_data_price['SecuritiesCode'] == 1301]
-# print(new_list)
 
         
