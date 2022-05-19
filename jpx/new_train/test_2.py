@@ -1,15 +1,17 @@
 import pandas as pd
 import numpy as np
 import lightgbm as lgb
+import matplotlib.pyplot as plt
 
-LAG_LIST = [1,2,3,5,7,10,15] #lag信息序列
+
+LAG_LIST = [1,2,3,4,8,16,25,32,48,56,64,78,90] #lag信息序列
 K_FOLDS = 7 #测试集个数
 OVERLAP_RATIO = 0.3 #cv测试集覆盖比率
-TEST_DATA_RATIO = 0.3 #每组中测试集所占比例
+TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 seed0 = 8586 #随机种子
 #提升树的参数设定
 params = {
-    'early_stopping_rounds': 50,
+    'early_stopping_rounds': 100,
     'objective': 'regression',
     'metric': 'rmse',
 #     'metric': 'None',
@@ -54,16 +56,21 @@ def get_date_divide(date_list,k_folds, overlap_ratio,test_data_ratio):
     return date_set
 
 def get_lag_info(train_data,lag_list):
+    train_data['target_ne'] = train_data.groupby(['SecuritiesCode'])['Target'].shift(-1)
     for lag_length in lag_list:
         train_data[f'lag_{lag_length}_info'] = train_data.groupby(['SecuritiesCode'])['Close'].shift(lag_length)
         train_data[f'lag_{lag_length}_info'] = (train_data['Close']-train_data[f'lag_{lag_length}_info'])/train_data[f'lag_{lag_length}_info']
-    train_data['target_ne'] = train_data.groupby(['SecuritiesCode'])['Target'].shift(-1)
     train_data = train_data.drop(columns=['Open','Close'])
     train_data = train_data.dropna(axis=0,how='any')
     return train_data
 
 def add_rank(df):
     df["Rank"] = df.groupby("Date")["predict_tartget"].rank(ascending=False, method="first") - 1 
+    df["Rank"] = df["Rank"].astype("int")
+    return df
+
+def add_random_rank(df):
+    df["Rank"] = df.groupby("Date")['SecuritiesCode'].rank(ascending=False, method="first") - 1 
     df["Rank"] = df["Rank"].astype("int")
     return df
 
@@ -86,6 +93,9 @@ date_list = train_data_price.sort_values(by='Date',ascending=True)['Date'].uniqu
 print(list(train_data_price))
 date_list = get_date_divide(date_list,K_FOLDS,OVERLAP_RATIO,TEST_DATA_RATIO)
 
+ratio_set = []
+random_ratio_set = []
+features_importance = []
 for time_set in date_list:
     print(time_set)
     train_data = train_data_price[(train_data_price['Date']>time_set[0]) & (train_data_price['Date']<time_set[1])]
@@ -103,13 +113,44 @@ for time_set in date_list:
                           num_boost_round = 5000,
                           verbose_eval = 100,   
                          )
+    features_importance.append(model.feature_importance())
     test_data['predict_tartget'] = model.predict(x_test)
     add_rank(test_data)
     test_data = test_data[['Date','SecuritiesCode','Target','Rank']]
-    print(">>>>>>>>>>>>>>")
-    print(calc_spread_return_sharpe(test_data)[0])
+    ratio_set.append(calc_spread_return_sharpe(test_data)[0])
+    add_random_rank(test_data)
+    random_ratio_set.append(calc_spread_return_sharpe(test_data)[0])
     print(">>>>>>>>>>>>>>")
 
+tool_set = []
+name_list = []
+for i in range(K_FOLDS):
+    tool_set.append(i+1)
+    name_list.append(f'num_{i+1}')
+
+tool_set_2 = []
+for i in range(len(LAG_LIST)+1):
+    tool_set_2.append(i+1)
+
+
+print(features_importance)
+
+print(list(train_data))
+
+def compare_importance(list_):
+    sum_ = list_.sum()
+    list_ = list_/sum_
+    return list_
+
+
+for i in range(K_FOLDS):
+    plt.plot(tool_set_2,compare_importance(features_importance[i]) )
+plt.legend(name_list)
+plt.show()
+plt.plot(tool_set,ratio_set)
+plt.plot(tool_set,random_ratio_set)
+plt.legend(['predict','Random'])
+plt.show()
 
 
 # new_list = train_data_price[train_data_price['SecuritiesCode'] == 1301]
