@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 new_data = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
-new_data = new_data[['Date','SecuritiesCode','AdjustmentFactor']]
+new_data = new_data[['Date','Open','Close','SecuritiesCode','AdjustmentFactor']]
 print(list(new_data))
 
 def get_adjustment(list_,lag_length):
