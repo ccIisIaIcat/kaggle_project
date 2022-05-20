@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
 LAG_LIST = [1,3,7,30] #lag信息序列
-K_FOLDS = 5 #测试集个数
+K_FOLDS = 20 #测试集个数
 OVERLAP_RATIO = 0.05 #cv测试集覆盖比率
 TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 seed0 = 8586 #随机种子
@@ -76,11 +76,13 @@ def get_adjustment(list_,lag_length):
 
 def get_lag_info(train_data,lag_list):
     train_data['target_ne'] = train_data.groupby(['SecuritiesCode'])['Target'].shift(-1)
+    train_data['target_ne'] = train_data['target_ne'].apply(np.log1p)
     for lag_length in lag_list:
         print('data_process:',lag_length)
         train_data['adj'] = train_data.groupby(['SecuritiesCode'])['AdjustmentFactor'].transform(lambda ls_:get_adjustment(ls_,lag_length))
         train_data[f'lag_{lag_length}_info'] = train_data.groupby(['SecuritiesCode'])['Close'].shift(lag_length)
         train_data[f'lag_{lag_length}_info'] = (train_data['Close']/train_data['adj']-train_data[f'lag_{lag_length}_info'])/train_data[f'lag_{lag_length}_info']
+        train_data[f'lag_{lag_length}_info'] = train_data[f'lag_{lag_length}_info'].apply(np.log1p)
         train_data = train_data.drop(columns=['adj'])
     train_data = train_data.drop(columns=['Open','Close','AdjustmentFactor'])
     train_data = train_data.dropna(axis=0,how='any')
