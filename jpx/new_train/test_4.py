@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
 LAG_LIST = [1,2,3,4,8,16,25,32,48,56,64,78,90] #lag信息序列
-K_FOLDS = 1 #测试集个数
+K_FOLDS = 15 #测试集个数
 OVERLAP_RATIO = 0.05 #cv测试集覆盖比率
 TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 seed0 = 8586 #随机种子
@@ -105,15 +105,10 @@ ratio_set = []
 random_ratio_set = []
 features_importance = []
 
-def get_tool_dataframe(df):
-    tool_dataframe = df.iloc[1]
-    tool_dataframe['predict_tartget'] = 0
-    return tool_dataframe
-
 
 for time_set in date_list:
     print(time_set)
-    tool_dataframe = get_tool_dataframe(train_data_price)
+    tool_dataframe = pd.DataFrame()
     for sector in sector_set:
         train_data = train_data_price[(train_data_price['Date']>time_set[0]) & (train_data_price['Date']<time_set[1]) & (train_data_price['17SectorCode'] == sector)]
         test_data = train_data_price[(train_data_price['Date']>time_set[1]) & (train_data_price['Date']<time_set[2]) & (train_data_price['17SectorCode'] == sector)]
@@ -132,34 +127,33 @@ for time_set in date_list:
                             )
         features_importance.append(model.feature_importance())
         test_data['predict_tartget'] = model.predict(x_test)
-        pd.concat([tool_dataframe,test_data],sort=False)
-    tool_dataframe.drop([0],inplace=True)
+        tool_dataframe = pd.concat([tool_dataframe,test_data],sort=False)
     add_rank(tool_dataframe)
     tool_dataframe = tool_dataframe[['Date','SecuritiesCode','Target','Rank']]
-#     ratio_set.append(calc_spread_return_sharpe(test_data)[0])
-#     add_random_rank(test_data)
-#     random_ratio_set.append(calc_spread_return_sharpe(test_data)[0])
-#     print(">>>>>>>>>>>>>>")
+    ratio_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
+    add_random_rank(tool_dataframe)
+    random_ratio_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
+    print(">>>>>>>>>>>>>>")
 
-# tool_set = []
-# name_list = []
-# for i in range(K_FOLDS):
-#     tool_set.append(i+1)
-#     name_list.append(f'num_{i+1}')
-# tool_set_2 = []
-# for i in range(len(LAG_LIST)+1):
-#     tool_set_2.append(i+1)
+tool_set = []
+name_list = []
+for i in range(K_FOLDS):
+    tool_set.append(i+1)
+    name_list.append(f'num_{i+1}')
+tool_set_2 = []
+for i in range(len(LAG_LIST)+1):
+    tool_set_2.append(i+1)
 
-# lala = np.array(ratio_set)
-# lala_2 = np.array(random_ratio_set)
+lala = np.array(ratio_set)
+lala_2 = np.array(random_ratio_set)
 
-# for i in range(K_FOLDS):
-#     plt.plot(tool_set_2,features_importance[i])
-# plt.legend(name_list)
-# plt.show()
-# plt.plot(tool_set,ratio_set)
-# plt.plot(tool_set,random_ratio_set)
-# plt.legend(['predict','Random'])
-# print(lala.mean())
-# print(lala_2.mean())
-# plt.show()
+for i in range(K_FOLDS):
+    plt.plot(tool_set_2,features_importance[i])
+plt.legend(name_list)
+plt.show()
+plt.plot(tool_set,ratio_set)
+plt.plot(tool_set,random_ratio_set)
+plt.legend(['predict','Random'])
+print(lala.mean())
+print(lala_2.mean())
+plt.show()
