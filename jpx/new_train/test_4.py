@@ -99,33 +99,43 @@ train_data_price = get_lag_info(train_data_price,LAG_LIST)
 date_list = train_data_price.sort_values(by='Date',ascending=True)['Date'].unique()
 print(list(train_data_price))
 date_list = get_date_divide(date_list,K_FOLDS,OVERLAP_RATIO,TEST_DATA_RATIO)
+sector_set = train_data_price['17SectorCode'].unique()
+
+ratio_set = []
+random_ratio_set = []
+features_importance = []
+
+def get_tool_dataframe(df):
+    tool_dataframe = df.iloc[1]
+    tool_dataframe['predict_tartget'] = 0
+    return tool_dataframe
 
 
-
-# ratio_set = []
-# random_ratio_set = []
-# features_importance = []
-# for time_set in date_list:
-#     print(time_set)
-#     train_data = train_data_price[(train_data_price['Date']>time_set[0]) & (train_data_price['Date']<time_set[1])]
-#     test_data = train_data_price[(train_data_price['Date']>time_set[1]) & (train_data_price['Date']<time_set[2])]
-#     x_train = train_data.drop(columns=['Date','SecuritiesCode','Target'])
-#     y_train = train_data['Target']
-#     x_test = test_data.drop(columns=['Date','SecuritiesCode','Target'])
-#     y_test = test_data['Target']
-#     train_dataset = lgb.Dataset(x_train,y_train)
-#     val_dataset = lgb.Dataset(x_test,y_test,reference=train_dataset)
-#     model = lgb.train(params = params,
-#                           train_set = train_dataset, 
-#                           valid_sets=[train_dataset, val_dataset],
-#                           valid_names=['tr', 'vl'],
-#                           num_boost_round = 5000,
-#                           verbose_eval = 100,   
-#                          )
-#     features_importance.append(model.feature_importance())
-#     test_data['predict_tartget'] = model.predict(x_test)
-#     add_rank(test_data)
-#     test_data = test_data[['Date','SecuritiesCode','Target','Rank']]
+for time_set in date_list:
+    print(time_set)
+    tool_dataframe = get_tool_dataframe(train_data_price)
+    for sector in sector_set:
+        train_data = train_data_price[(train_data_price['Date']>time_set[0]) & (train_data_price['Date']<time_set[1]) & (train_data_price['17SectorCode'] == sector)]
+        test_data = train_data_price[(train_data_price['Date']>time_set[1]) & (train_data_price['Date']<time_set[2]) & (train_data_price['17SectorCode'] == sector)]
+        x_train = train_data.drop(columns=['Date','SecuritiesCode','Target','17SectorCode'])
+        y_train = train_data['Target']
+        x_test = test_data.drop(columns=['Date','SecuritiesCode','Target','17SectorCode'])
+        y_test = test_data['Target']
+        train_dataset = lgb.Dataset(x_train,y_train)
+        val_dataset = lgb.Dataset(x_test,y_test,reference=train_dataset)
+        model = lgb.train(params = params,
+                            train_set = train_dataset, 
+                            valid_sets=[train_dataset, val_dataset],
+                            valid_names=['tr', 'vl'],
+                            num_boost_round = 5000,
+                            verbose_eval = 100,   
+                            )
+        features_importance.append(model.feature_importance())
+        test_data['predict_tartget'] = model.predict(x_test)
+        pd.concat([tool_dataframe,test_data],sort=False)
+    tool_dataframe.drop([0],inplace=True)
+    add_rank(tool_dataframe)
+    tool_dataframe = tool_dataframe[['Date','SecuritiesCode','Target','Rank']]
 #     ratio_set.append(calc_spread_return_sharpe(test_data)[0])
 #     add_random_rank(test_data)
 #     random_ratio_set.append(calc_spread_return_sharpe(test_data)[0])
@@ -137,7 +147,7 @@ date_list = get_date_divide(date_list,K_FOLDS,OVERLAP_RATIO,TEST_DATA_RATIO)
 #     tool_set.append(i+1)
 #     name_list.append(f'num_{i+1}')
 # tool_set_2 = []
-# for i in range(len(LAG_LIST)+2):
+# for i in range(len(LAG_LIST)+1):
 #     tool_set_2.append(i+1)
 
 # lala = np.array(ratio_set)
