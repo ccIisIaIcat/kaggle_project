@@ -21,6 +21,13 @@ def cal_sharp_ratio(list_):
 def combine_sharp_ratio(list_1,list_2):
     return cal_sharp_ratio(list_1+list_2)
 
-def get_top_list(matrix):
 
-    return 0
+def get_top_list(list_now,matrix,ratio_a,ratio_b):
+    max_sharp = -100
+    max_id = -1
+    for i in range(len(matrix)):
+        sharp_now = combine_sharp_ratio(ratio_a*list_now,ratio_b*matrix[i])
+        if sharp_now > max_sharp:
+            max_sharp = sharp_now
+            max_id = i
+    return max_id,max_sharp
