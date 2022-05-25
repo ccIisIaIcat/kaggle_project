@@ -8,7 +8,7 @@ from sklearn import preprocessing
 toprank_weight_ratio = 2
 portfolio_size = 200
 weights = np.linspace(start=toprank_weight_ratio, stop=1, num=portfolio_size)
-print(weights)
+lbl = preprocessing.LabelEncoder()
 
 test_list = [1,1,1,1,1.2]
 test_list_2 = [1,1,1,1,1.2]
@@ -31,3 +31,13 @@ def get_top_list(list_now,matrix,ratio_a,ratio_b):
             max_sharp = sharp_now
             max_id = i
     return max_id,max_sharp
+
+train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
+train_data_price = train_data_price[['Date','SecuritiesCode','Open','Close','Target','AdjustmentFactor']]
+stock_info = pd.read_csv('kaggle_data/JPX/stock_list.csv')
+stock_info = stock_info[['SecuritiesCode','17SectorCode']]
+stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(str))
+stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(int))
+train_data_price = pd.merge(train_data_price,stock_info,how='left',on='SecuritiesCode')
+
+print(train_data_price)
