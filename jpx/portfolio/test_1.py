@@ -43,6 +43,8 @@ def get_the_best_portfolio(info_matrix,list_):
             max_id = i
             max_sharp = sharp_now
     up_portfolio.append(info_matrix[max_id])
+    signal = 1
+    
 
 
 
