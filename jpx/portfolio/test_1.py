@@ -32,7 +32,18 @@ def get_top_list(list_now,matrix,ratio_a,ratio_b):
             max_id = i
     return max_id,max_sharp
 
-# def get_the_best_portfolio(info_matrix,list_):
+def get_the_best_portfolio(info_matrix,list_):
+    up_portfolio = []
+    down_portfolio = []
+    max_sharp = -1
+    max_id = -1
+    for i in range(len(info_matrix)):
+        sharp_now = cal_sharp_ratio(info_matrix[i])
+        if  sharp_now > max_sharp:
+            max_id = i
+            max_sharp = sharp_now
+    up_portfolio.append(info_matrix[max_id])
+
 
 
 
