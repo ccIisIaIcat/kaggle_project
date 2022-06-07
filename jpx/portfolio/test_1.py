@@ -72,6 +72,21 @@ def get_the_best_portfolio(info_matrix):
             weight_now_down += weights[id_now]
             id_list_down[i] = max_id
             down_portfolio.append(info_matrix[max_id])
+    return id_list_up,id_list_down
+
+train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
+train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
+security_list = train_data_price['SecuritiesCode'].unique()
+date_list = train_data_price['Date'].unique()
+
+print(date_list)
+test_matrix = []
+
+for se_code in security_list:
+    temp_list = train_data_price[(train_data_price['Date']>'2020-10-01') | train_data_price['SecuritiesCode'] == se_code]['Target']
+    test_matrix.append(test_list)
+print(test_matrix)
+
     
     
 
