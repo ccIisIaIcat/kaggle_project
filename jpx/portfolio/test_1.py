@@ -35,6 +35,7 @@ def get_best_part(original_list,original_weight,new_weight,matrix,signal_list):
             if sharp_now > max_sharp:
                 max_sharp = sharp_now
                 answer_id = i
+    print(max_sharp)
     return answer_id
 
 def get_best_part_2(original_list,original_weight,new_weight,matrix,signal_list):
@@ -45,6 +46,7 @@ def get_best_part_2(original_list,original_weight,new_weight,matrix,signal_list)
             if sharp_now > max_sharp:
                 max_sharp = sharp_now
                 answer_id = i
+    print(max_sharp)
     return answer_id
       
 
@@ -61,6 +63,7 @@ def get_the_best_portfolio(info_matrix):
         if i%2 == 0:
             id_now = i // 2
             max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list)
+            temp_list = (temp_list*weight_now+info_matrix[max_id]*weights[id_now])/(weight_now+weights[id_now])
             signal_list[max_id] = 1
             weight_now += weights[id_now]
             id_list_up[id_now] = max_id
@@ -68,9 +71,10 @@ def get_the_best_portfolio(info_matrix):
         else:
             id_now = i // 2
             max_id = get_best_part_2(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list)
+            temp_list = (temp_list*weight_now-info_matrix[max_id]*weights[id_now])/(weight_now+weights[id_now])
             signal_list[max_id] = -1
             weight_now_down += weights[id_now]
-            id_list_down[i] = max_id
+            id_list_down[id_now] = max_id
             down_portfolio.append(info_matrix[max_id])
     return id_list_up,id_list_down
 
@@ -78,14 +82,19 @@ train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
 train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
 security_list = train_data_price['SecuritiesCode'].unique()
 date_list = train_data_price['Date'].unique()
+train_data_price['Signal'] = train_data_price.groupby(['SecuritiesCode'])['Target'].transform('count')
+train_data_price = train_data_price[train_data_price['Signal'] == 1202]
+train_data_price = train_data_price[train_data_price['Date']>'2010-12-01']
 
-print(date_list)
 test_matrix = []
+new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
+new_info = list(new_info[1])
+for obj in new_info:
+    test_matrix.append(np.array(obj.values))
+    print(len(np.array(obj.values)))
+print(get_the_best_portfolio(test_matrix))
 
-for se_code in security_list:
-    temp_list = train_data_price[(train_data_price['Date']>'2020-10-01') | train_data_price['SecuritiesCode'] == se_code]['Target']
-    test_matrix.append(test_list)
-print(test_matrix)
+
 
     
     
