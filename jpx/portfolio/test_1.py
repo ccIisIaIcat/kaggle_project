@@ -68,21 +68,33 @@ def get_the_best_portfolio(info_matrix):
             down_portfolio.append(info_matrix[max_id])
     return id_list_up,id_list_down
 
+# def get_new_target_label(period_,)
+
 train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
 train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
 security_list = train_data_price['SecuritiesCode'].unique()
 date_list = train_data_price['Date'].unique()
 train_data_price['Signal'] = train_data_price.groupby(['SecuritiesCode'])['Target'].transform('count')
 train_data_price = train_data_price[train_data_price['Signal'] == 1202]
-train_data_price = train_data_price[train_data_price['Date']>'2010-12-01']
-
-test_matrix = []
 new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
 new_info = list(new_info[1])
-for obj in new_info:
-    test_matrix.append(np.array(obj.values))
-    print(len(np.array(obj.values)))
-print(get_the_best_portfolio(test_matrix))
+s_code_list = train_data_price[]
+
+date_list = train_data_price['Date'].unique()
+
+
+
+
+
+
+# train_data_price = train_data_price[train_data_price['Date']>'2010-12-01']
+
+# test_matrix = []
+# new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
+# new_info = list(new_info[1])
+# for obj in new_info:
+#     test_matrix.append(np.array(obj.values))
+# print(get_the_best_portfolio(test_matrix))
 
 
 
