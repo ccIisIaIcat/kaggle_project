@@ -21,35 +21,25 @@ test_list_2 = np.array(test_list_2)
 def cal_sharp_ratio(list_):
     return list_.mean()/list_.std()
 
-def combine_sharp_ratio(list_1,list_2,weight_1,weight_2):
-    return cal_sharp_ratio((list_1*weight_1+list_2*weight_2)/(weight_1+weight_2))
-
-def combine_sharp_ratio_2(list_1,list_2,weight_1,weight_2):
-    return cal_sharp_ratio((list_1*weight_1-list_2*weight_2)/(weight_1+weight_2))
-
-def get_best_part(original_list,original_weight,new_weight,matrix,signal_list):
+def get_best_part(original_list,original_weight,new_weight,matrix,signal_list,positive_nagetive):
     max_sharp = -99999
-    for i in range(len(matrix)):
-        if signal_list[i] == 0:
-            sharp_now = combine_sharp_ratio(original_list,matrix[i],original_weight,new_weight)
-            if sharp_now > max_sharp:
-                max_sharp = sharp_now
-                answer_id = i
-    print(max_sharp)
-    return answer_id
-
-def get_best_part_2(original_list,original_weight,new_weight,matrix,signal_list):
-    max_sharp = -99999
-    for i in range(len(matrix)):
-        if signal_list[i] == 0:
-            sharp_now = combine_sharp_ratio_2(original_list,matrix[i],original_weight,new_weight)
-            if sharp_now > max_sharp:
-                max_sharp = sharp_now
-                answer_id = i
+    if positive_nagetive == 1:
+        for i in range(len(matrix)):
+            if signal_list[i] == 0:
+                sharp_now = cal_sharp_ratio((original_list*original_weight+matrix[i]*new_weight)/(original_weight+new_weight))
+                if sharp_now > max_sharp:
+                    max_sharp = sharp_now
+                    answer_id = i
+    else:
+        for i in range(len(matrix)):
+            if signal_list[i] == 0:
+                sharp_now = cal_sharp_ratio((original_list*original_weight-matrix[i]*new_weight)/(original_weight+new_weight))
+                if sharp_now > max_sharp:
+                    max_sharp = sharp_now
+                    answer_id = i
     print(max_sharp)
     return answer_id
       
-
 def get_the_best_portfolio(info_matrix):
     up_portfolio = []
     down_portfolio = []
@@ -62,7 +52,7 @@ def get_the_best_portfolio(info_matrix):
     for i in range(400):
         if i%2 == 0:
             id_now = i // 2
-            max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list)
+            max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=1)
             temp_list = (temp_list*weight_now+info_matrix[max_id]*weights[id_now])/(weight_now+weights[id_now])
             signal_list[max_id] = 1
             weight_now += weights[id_now]
@@ -70,7 +60,7 @@ def get_the_best_portfolio(info_matrix):
             up_portfolio.append(info_matrix[max_id])
         else:
             id_now = i // 2
-            max_id = get_best_part_2(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list)
+            max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=-1)
             temp_list = (temp_list*weight_now-info_matrix[max_id]*weights[id_now])/(weight_now+weights[id_now])
             signal_list[max_id] = -1
             weight_now_down += weights[id_now]
