@@ -9,6 +9,8 @@ from sklearn import preprocessing
 toprank_weight_ratio = 2
 portfolio_size = 200
 weights = np.linspace(start=toprank_weight_ratio, stop=1, num=portfolio_size)
+# weights = np.insert(weights,0,0)
+# print(weights)
 lbl = preprocessing.LabelEncoder()
 
 test_list = [1,1,1,1,1.2]
@@ -50,12 +52,26 @@ def get_the_best_portfolio(info_matrix):
     up_portfolio = []
     down_portfolio = []
     signal_list = np.zeros(len(info_matrix))
-    id_list = np.zeros(len(info_matrix))
+    id_list_up = np.zeros(200)
+    id_list_down = np.zeros(200)
     temp_list = np.zeros(len(info_matrix[0]))
+    weight_now = 0
+    weight_now_down = 0
     for i in range(400):
         if i%2 == 0:
-            
+            id_now = i // 2
+            max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list)
+            signal_list[max_id] = 1
+            weight_now += weights[id_now]
+            id_list_up[id_now] = max_id
+            up_portfolio.append(info_matrix[max_id])
         else:
+            id_now = i // 2
+            max_id = get_best_part_2(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list)
+            signal_list[max_id] = -1
+            weight_now_down += weights[id_now]
+            id_list_down[i] = max_id
+            down_portfolio.append(info_matrix[max_id])
     
     
 
@@ -71,6 +87,3 @@ def get_the_best_portfolio(info_matrix):
 # stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(int))
 # train_data_price = pd.merge(train_data_price,stock_info,how='left',on='SecuritiesCode')
 
-aa = np.zeros(10)
-
-print(aa)
