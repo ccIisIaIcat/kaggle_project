@@ -1,3 +1,4 @@
+from distutils.log import info
 import pandas as pd
 import numpy as np
 import lightgbm as lgb
@@ -18,32 +19,44 @@ test_list_2 = np.array(test_list_2)
 def cal_sharp_ratio(list_):
     return list_.mean()/list_.std()
 
-def combine_sharp_ratio(list_1,list_2):
-    return cal_sharp_ratio(list_1+list_2)
+def combine_sharp_ratio(list_1,list_2,weight_1,weight_2):
+    return cal_sharp_ratio((list_1*weight_1+list_2*weight_2)/(weight_1+weight_2))
 
+def combine_sharp_ratio_2(list_1,list_2,weight_1,weight_2):
+    return cal_sharp_ratio((list_1*weight_1-list_2*weight_2)/(weight_1+weight_2))
 
-def get_top_list(list_now,matrix,ratio_a,ratio_b):
-    max_sharp = -100
-    max_id = -1
+def get_best_part(original_list,original_weight,new_weight,matrix,signal_list):
+    max_sharp = -99999
     for i in range(len(matrix)):
-        sharp_now = combine_sharp_ratio(ratio_a*list_now,ratio_b*matrix[i])
-        if sharp_now > max_sharp:
-            max_sharp = sharp_now
-            max_id = i
-    return max_id,max_sharp
+        if signal_list[i] == 0:
+            sharp_now = combine_sharp_ratio(original_list,matrix[i],original_weight,new_weight)
+            if sharp_now > max_sharp:
+                max_sharp = sharp_now
+                answer_id = i
+    return answer_id
 
-def get_the_best_portfolio(info_matrix,list_):
+def get_best_part_2(original_list,original_weight,new_weight,matrix,signal_list):
+    max_sharp = -99999
+    for i in range(len(matrix)):
+        if signal_list[i] == 0:
+            sharp_now = combine_sharp_ratio_2(original_list,matrix[i],original_weight,new_weight)
+            if sharp_now > max_sharp:
+                max_sharp = sharp_now
+                answer_id = i
+    return answer_id
+      
+
+def get_the_best_portfolio(info_matrix):
     up_portfolio = []
     down_portfolio = []
-    max_sharp = -1
-    max_id = -1
-    for i in range(len(info_matrix)):
-        sharp_now = cal_sharp_ratio(info_matrix[i])
-        if  sharp_now > max_sharp:
-            max_id = i
-            max_sharp = sharp_now
-    up_portfolio.append(info_matrix[max_id])
-    signal = 1
+    signal_list = np.zeros(len(info_matrix))
+    id_list = np.zeros(len(info_matrix))
+    temp_list = np.zeros(len(info_matrix[0]))
+    for i in range(400):
+        if i%2 == 0:
+            
+        else:
+    
     
 
 
@@ -58,4 +71,6 @@ def get_the_best_portfolio(info_matrix,list_):
 # stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(int))
 # train_data_price = pd.merge(train_data_price,stock_info,how='left',on='SecuritiesCode')
 
-print(weights)
+aa = np.zeros(10)
+
+print(aa)
