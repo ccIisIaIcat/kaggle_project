@@ -40,7 +40,7 @@ def get_best_part(original_list,original_weight,new_weight,matrix,signal_list,po
     print(max_sharp)
     return answer_id
       
-def get_the_best_portfolio(info_matrix):
+def get_the_best_portfolio(info_matrix,scode_list):
     up_portfolio = []
     down_portfolio = []
     signal_list = np.zeros(len(info_matrix))
@@ -66,7 +66,15 @@ def get_the_best_portfolio(info_matrix):
             weight_now_down += weights[id_now]
             id_list_down[id_now] = max_id
             down_portfolio.append(info_matrix[max_id])
-    return id_list_up,id_list_down
+    up_list = []
+    down_list = []
+    print(id_list_up)
+    print(id_list_up)
+    for num_1 in id_list_up:
+        up_list.append(scode_list[num_1])
+    for num_2 in id_list_down:
+        down_list.append(scode_list[num_2])
+    return up_list,down_list
 
 # def get_new_target_label(period_,)
 
@@ -76,25 +84,17 @@ security_list = train_data_price['SecuritiesCode'].unique()
 date_list = train_data_price['Date'].unique()
 train_data_price['Signal'] = train_data_price.groupby(['SecuritiesCode'])['Target'].transform('count')
 train_data_price = train_data_price[train_data_price['Signal'] == 1202]
-new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
-new_info = list(new_info[1])
-s_code_list = train_data_price[]
 
 date_list = train_data_price['Date'].unique()
+train_data_price = train_data_price[train_data_price['Date']>'2010-12-01']
 
-
-
-
-
-
-# train_data_price = train_data_price[train_data_price['Date']>'2010-12-01']
-
-# test_matrix = []
-# new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
-# new_info = list(new_info[1])
-# for obj in new_info:
-#     test_matrix.append(np.array(obj.values))
-# print(get_the_best_portfolio(test_matrix))
+test_matrix = []
+new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
+scode_list = list(new_info[0].values)
+new_info = list(new_info[1])
+for obj in new_info:
+    test_matrix.append(np.array(obj.values))
+print(get_the_best_portfolio(test_matrix,scode_list))
 
 
 
