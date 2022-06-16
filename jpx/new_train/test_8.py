@@ -46,7 +46,7 @@ stock_info = stock_info[['SecuritiesCode','17SectorCode']]
 stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(str))
 stock_info['17SectorCode'] = lbl.fit_transform(stock_info['17SectorCode'].astype(int))
 train_data_price = pd.merge(train_data_price,stock_info,how='left',on='SecuritiesCode')
-prerank_info = pd.read_csv('kaggle_data/JPX/tool_data/rank_info.csv')
+prerank_info = pd.read_csv('kaggle_data/JPX/tool_data/rank_info_3.csv')
 prerank_info = prerank_info[['Date','SecuritiesCode',f'lag_rank_{PORTFOLIO_SIZE}']]
 train_data_price = pd.merge(train_data_price,prerank_info,how='left',on=['Date','SecuritiesCode'])
 train_data_price[f'lag_rank_{PORTFOLIO_SIZE}'].fillna(0)
@@ -177,6 +177,7 @@ for i in range(len(LAG_LIST)+1):
 
 lala = np.array(ratio_set)
 lala_2 = np.array(random_ratio_set)
+lala_3 = np.array(prerank_set)
 
 for i in range(K_FOLDS):
     plt.plot(tool_set_2,features_importance[i])
@@ -188,4 +189,5 @@ plt.plot(tool_set,prerank_set)
 plt.legend(['predict','Random','prerank'])
 print(lala.mean())
 print(lala_2.mean())
+print(lala_3.mean())
 plt.show()
