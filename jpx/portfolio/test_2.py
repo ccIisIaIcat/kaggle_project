@@ -82,9 +82,9 @@ def get_the_best_portfolio(info_matrix,scode_list):
         down_list.append(scode_list[int(num_2)])
     return up_list,down_list
 
-for i in range(len(date_list)-PORTFOLIO_SIZE-1):
+for i in range(len(date_list)-PORTFOLIO_SIZE-2):
     obj_now = [date_list[i],date_list[i+PORTFOLIO_SIZE]]
-    date_obj_list.append([obj_now,date_list[i+PORTFOLIO_SIZE+1]])
+    date_obj_list.append([obj_now,date_list[i+PORTFOLIO_SIZE+2]])
 
 up_num_list = []
 down_num_list = []
@@ -112,6 +112,6 @@ for date_obj in date_obj_list:
     temp_pd[f'lag_rank_{PORTFOLIO_SIZE}'] = (up_num_list+down_num_list)
     temp_pd['Date'] = date_obj[1]
     final_df = pd.concat([final_df,temp_pd],ignore_index=True)
-    if counter % 20 == 0:
-        final_df.to_csv('kaggle_data/JPX/tool_data/rank_info.csv')
+    if counter % 5 == 0:
+        final_df.to_csv('kaggle_data/JPX/tool_data/rank_info_2.csv')
     
