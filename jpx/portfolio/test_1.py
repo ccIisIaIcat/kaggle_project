@@ -9,14 +9,7 @@ from sklearn import preprocessing
 toprank_weight_ratio = 2
 portfolio_size = 200
 weights = np.linspace(start=toprank_weight_ratio, stop=1, num=portfolio_size)
-# weights = np.insert(weights,0,0)
-# print(weights)
 lbl = preprocessing.LabelEncoder()
-
-test_list = [1,1,1,1,1.2]
-test_list_2 = [1,1,1,1,1.2]
-test_list = np.array(test_list)
-test_list_2 = np.array(test_list_2)
 
 def cal_sharp_ratio(list_):
     return list_.mean()/list_.std()
@@ -68,12 +61,10 @@ def get_the_best_portfolio(info_matrix,scode_list):
             down_portfolio.append(info_matrix[max_id])
     up_list = []
     down_list = []
-    print(id_list_up)
-    print(id_list_up)
     for num_1 in id_list_up:
-        up_list.append(scode_list[num_1])
+        up_list.append(scode_list[int(num_1)])
     for num_2 in id_list_down:
-        down_list.append(scode_list[num_2])
+        down_list.append(scode_list[int(num_2)])
     return up_list,down_list
 
 # def get_new_target_label(period_,)
