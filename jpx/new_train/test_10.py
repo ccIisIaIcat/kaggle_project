@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
 LAG_LIST = [1,3,7,30] #lag信息序列
-K_FOLDS = 5 #测试集个数
+K_FOLDS =  7#测试集个数
 OVERLAP_RATIO = 0.1 #cv测试集覆盖比率
 TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 PORTFOLIO_SIZE = 30
@@ -108,19 +108,12 @@ def add_prerank_rank(df):
     df["Rank"] = df["Rank"].astype("int")
     return df
 
-def add_combine_rank(df,percent_weight,com_matrix):
-    temp_df = pd.DataFrame()
-    temp_df[f'lag_rank_{PORTFOLIO_SIZE}'] = (df[f'lag_rank_{PORTFOLIO_SIZE}']-df[f'lag_rank_{PORTFOLIO_SIZE}'].min())/(df[f'lag_rank_{PORTFOLIO_SIZE}'].max()-df[f'lag_rank_{PORTFOLIO_SIZE}'].min())
-    temp_df['Date'] = df['Date']
-    temp_df["predict_target"] = (df["predict_target"]-df["predict_target"].min())/(df["predict_target"].max()-df["predict_target"].min())
-    i = 0
-    for percent_ in percent_weight:
-        print("per_now:",i)
-        temp_df['percent_info'] = temp_df[f'lag_rank_{PORTFOLIO_SIZE}']*percent_ + temp_df['predict_target']*(1-percent_)
-        df['Rank'] = temp_df.groupby('Date')['percent_info'].rank(ascending=False, method="first") - 1
-        df["Rank"] = df["Rank"].astype("int")
-        com_matrix[i].append(calc_spread_return_sharpe(df)[0])
-        i += 1
+def add_combine_rank(df,percent_weight):
+    df['Rank'] = df[f'lag_rank_{PORTFOLIO_SIZE}']*percent_weight + df['predict_target']*(1-percent_weight)
+    df["Rank"] = df.groupby("Date")["Rank"].rank(ascending=False, method="first") - 1
+    df["Rank"] = df["Rank"].astype("int")
+    return df
+    
 
 
 
@@ -148,10 +141,8 @@ ratio_set = []
 random_ratio_set = []
 prerank_set = []
 features_importance = []
-combine_percent = np.linspace(start=0, stop=1, num=200)
-combine_matrix = []
-for i in range(len(combine_percent)):
-    combine_matrix.append([])
+combine_percent = 0.55
+combine_set = []
 
 for time_set in date_list:
     print(time_set)
@@ -179,7 +170,8 @@ for time_set in date_list:
     ratio_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     tool_dataframe = tool_dataframe[['Date','SecuritiesCode','Target','Rank','predict_target']]
     tool_dataframe = pd.merge(tool_dataframe,prerank_info,how='left',on=['Date','SecuritiesCode'])
-    add_combine_rank(tool_dataframe,com_matrix=combine_matrix,percent_weight=combine_percent)
+    add_combine_rank(tool_dataframe,percent_weight=combine_percent)
+    combine_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     add_random_rank(tool_dataframe)
     random_ratio_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     add_prerank_rank(tool_dataframe)
@@ -198,7 +190,7 @@ for i in range(len(LAG_LIST)+1):
 lala = np.array(ratio_set)
 lala_2 = np.array(random_ratio_set)
 lala_3 = np.array(prerank_set)
-lala_4 = np.zeros(len(combine_percent))
+lala_4 = np.array(combine_set)
 
 for i in range(K_FOLDS):
     plt.plot(tool_set_2,features_importance[i])
@@ -207,15 +199,10 @@ plt.show()
 plt.plot(tool_set,ratio_set)
 plt.plot(tool_set,random_ratio_set)
 plt.plot(tool_set,prerank_set)
-plt.legend(['predict','Random','prerank'])
+plt.plot(tool_set,combine_set)
+plt.legend(['predict','Random','prerank','combine'])
 print(lala.mean())
 print(lala_2.mean())
 print(lala_3.mean())
-plt.show()
-tool_set_3 = []
-print(combine_matrix)
-for i in range(len(combine_matrix)):
-    lala_4[i] = np.array(combine_matrix[i]).mean()
-    tool_set_3.append(i)
-plt.plot(tool_set_3,lala_4)
+print(lala_4.mean())
 plt.show()
