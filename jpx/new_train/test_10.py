@@ -5,11 +5,17 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
 LAG_LIST = [1,3,7,30] #lag信息序列
-K_FOLDS =  7#测试集个数
-OVERLAP_RATIO = 0.1 #cv测试集覆盖比率
+K_FOLDS =  12#测试集个数
+OVERLAP_RATIO = 0.3 #cv测试集覆盖比率
 TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 PORTFOLIO_SIZE = 30
 seed0 = 8586 #随机种子
+ratio_set = []
+random_ratio_set = []
+prerank_set = []
+features_importance = []
+combine_percent = 0.6
+combine_set = []
 #提升树的参数设定
 params = {
     'early_stopping_rounds': 100,
@@ -109,6 +115,8 @@ def add_prerank_rank(df):
     return df
 
 def add_combine_rank(df,percent_weight):
+    df[f'lag_rank_{PORTFOLIO_SIZE}'] = (df[f'lag_rank_{PORTFOLIO_SIZE}']-df[f'lag_rank_{PORTFOLIO_SIZE}'].min())/(df[f'lag_rank_{PORTFOLIO_SIZE}'].max()-df[f'lag_rank_{PORTFOLIO_SIZE}'].min())
+    df['predict_target'] = (df['predict_target']-df['predict_target'].min())/(df['predict_target'].max()-df['predict_target'].min())
     df['Rank'] = df[f'lag_rank_{PORTFOLIO_SIZE}']*percent_weight + df['predict_target']*(1-percent_weight)
     df["Rank"] = df.groupby("Date")["Rank"].rank(ascending=False, method="first") - 1
     df["Rank"] = df["Rank"].astype("int")
@@ -137,12 +145,6 @@ print(list(train_data_price))
 date_list = get_date_divide(date_list,K_FOLDS,OVERLAP_RATIO,TEST_DATA_RATIO)
 sector_set = train_data_price['17SectorCode'].unique()
 
-ratio_set = []
-random_ratio_set = []
-prerank_set = []
-features_importance = []
-combine_percent = 0.55
-combine_set = []
 
 for time_set in date_list:
     print(time_set)
@@ -170,12 +172,12 @@ for time_set in date_list:
     ratio_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     tool_dataframe = tool_dataframe[['Date','SecuritiesCode','Target','Rank','predict_target']]
     tool_dataframe = pd.merge(tool_dataframe,prerank_info,how='left',on=['Date','SecuritiesCode'])
-    add_combine_rank(tool_dataframe,percent_weight=combine_percent)
-    combine_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     add_random_rank(tool_dataframe)
     random_ratio_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     add_prerank_rank(tool_dataframe)
     prerank_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
+    add_combine_rank(tool_dataframe,percent_weight=combine_percent)
+    combine_set.append(calc_spread_return_sharpe(tool_dataframe)[0])
     print(">>>>>>>>>>>>>>")
 
 tool_set = []

@@ -96,6 +96,8 @@ train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
 n_sum = len(date_obj_list)
 counter = 0
 final_df = pd.DataFrame(columns=['SecuritiesCode',f'lag_rank_{PORTFOLIO_SIZE}','Date'])
+print(date_obj_list)
+
 for date_obj in date_obj_list:
     counter += 1
     print(date_obj,"percent:",counter/n_sum,"   counter:",counter)
@@ -112,6 +114,6 @@ for date_obj in date_obj_list:
     temp_pd[f'lag_rank_{PORTFOLIO_SIZE}'] = (up_num_list+down_num_list)
     temp_pd['Date'] = date_obj[1]
     final_df = pd.concat([final_df,temp_pd],ignore_index=True)
-    if counter % 5 == 0:
-        final_df.to_csv('kaggle_data/JPX/tool_data/rank_info_2.csv')
+    if counter % 50 == 0:
+        final_df.to_csv('kaggle_data/JPX/tool_data/rank_info_5.csv')
     
