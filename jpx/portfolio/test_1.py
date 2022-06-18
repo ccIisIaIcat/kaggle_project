@@ -1,13 +1,11 @@
 
 import pandas as pd
 import numpy as np
-import lightgbm as lgb
-import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
 # 投资组合权重
 toprank_weight_ratio = 2
-portfolio_size = 200
+portfolio_size = 250
 weights = np.linspace(start=toprank_weight_ratio, stop=1, num=portfolio_size)
 lbl = preprocessing.LabelEncoder()
 
@@ -37,12 +35,12 @@ def get_the_best_portfolio(info_matrix,scode_list):
     up_portfolio = []
     down_portfolio = []
     signal_list = np.zeros(len(info_matrix))
-    id_list_up = np.zeros(200)
-    id_list_down = np.zeros(200)
+    id_list_up = np.zeros(250)
+    id_list_down = np.zeros(250)
     temp_list = np.zeros(len(info_matrix[0]))
     weight_now = 0
     weight_now_down = 0
-    for i in range(400):
+    for i in range(500):
         if i%2 == 0:
             id_now = i // 2
             max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=1)
@@ -77,7 +75,7 @@ train_data_price['Signal'] = train_data_price.groupby(['SecuritiesCode'])['Targe
 train_data_price = train_data_price[train_data_price['Signal'] == 1202]
 
 date_list = train_data_price['Date'].unique()
-train_data_price = train_data_price[train_data_price['Date']>'2010-12-01']
+train_data_price = train_data_price[train_data_price['Date']>'2020-12-01']
 
 test_matrix = []
 new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])

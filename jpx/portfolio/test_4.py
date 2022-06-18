@@ -81,6 +81,8 @@ def get_the_best_portfolio(info_matrix,scode_list):
         down_list.append(scode_list[int(num_2)])
     return up_list,down_list
 
+print(date_list)
+date_list.sort()
 for i in range(len(date_list)-PORTFOLIO_SIZE-2):
     obj_now = [date_list[i],date_list[i+PORTFOLIO_SIZE]]
     date_obj_list.append([obj_now,date_list[i+PORTFOLIO_SIZE+2]])
