@@ -14,7 +14,7 @@ ratio_set = []
 random_ratio_set = []
 prerank_set = []
 features_importance = []
-combine_percent = 0.6
+combine_percent = 0.5
 combine_set = []
 #提升树的参数设定
 params = {
