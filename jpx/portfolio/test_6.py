@@ -1,11 +1,12 @@
+#考察计算最优组合时收益和方差的变化
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
+import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
 PORTFOLIO_SIZE = 30 #指定排名组合计算的是多少天前的组合
-LINUX_PATH = f"/home/ubuntu/test/calculation/rank_lag_{PORTFOLIO_SIZE}.csv"
 
 # 投资组合权重
 toprank_weight_ratio = 2
@@ -30,7 +31,7 @@ train_data_price = pd.merge(new_data_frame,train_data_price,on=['SecuritiesCode'
 train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
 
 def cal_sharp_ratio(list_):
-    return list_.mean()/list_.std()
+    return list_.mean()/(list_.std()+0.002)
 
 def get_best_part(original_list,original_weight,new_weight,matrix,signal_list,positive_nagetive):
     max_sharp = -99999
@@ -48,7 +49,8 @@ def get_best_part(original_list,original_weight,new_weight,matrix,signal_list,po
                 if sharp_now > max_sharp:
                     max_sharp = sharp_now
                     answer_id = i
-    return answer_id
+    print(max_sharp)
+    return answer_id,max_sharp
       
 def get_the_best_portfolio(info_matrix,scode_list):
     up_portfolio = []
@@ -59,19 +61,28 @@ def get_the_best_portfolio(info_matrix,scode_list):
     temp_list = np.zeros(len(info_matrix[0]))
     weight_now = 0
     weight_now_down = 0
+    sharp_set = []
+    mean_set = []
+    std_set = []
     for i in range(portfolio_size*2):
         if i%2 == 0:
             id_now = i // 2
-            max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=1)
+            max_id,max_sharp = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=1)
+            sharp_set.append(max_sharp)
             temp_list = (temp_list*weight_now+info_matrix[max_id]*weights[id_now])/(weight_now+weights[id_now])
+            mean_set.append(temp_list.mean()*len(temp_list))
+            std_set.append(temp_list.std())
             signal_list[max_id] = 1
             weight_now += weights[id_now]
             id_list_up[id_now] = max_id
             up_portfolio.append(info_matrix[max_id])
         else:
             id_now = i // 2
-            max_id = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=-1)
+            max_id,max_sharp = get_best_part(temp_list,weight_now,weights[id_now],matrix=info_matrix,signal_list=signal_list,positive_nagetive=-1)
+            sharp_set.append(max_sharp)
             temp_list = (temp_list*weight_now-info_matrix[max_id]*weights[id_now])/(weight_now+weights[id_now])
+            mean_set.append(temp_list.mean()*len(temp_list))
+            std_set.append(temp_list.std())
             signal_list[max_id] = -1
             weight_now_down += weights[id_now]
             id_list_down[id_now] = max_id
@@ -83,6 +94,7 @@ def get_the_best_portfolio(info_matrix,scode_list):
     for num_2 in id_list_down:
         down_list.append(scode_list[int(num_2)])
     return up_list,down_list
+    
 date_list.sort()
 for i in range(len(date_list)-PORTFOLIO_SIZE-2):
     obj_now = [date_list[i],date_list[i+PORTFOLIO_SIZE]]
@@ -100,27 +112,61 @@ counter = 0
 final_df = pd.DataFrame(columns=['SecuritiesCode',f'lag_rank_{PORTFOLIO_SIZE}','Date'])
 
 
-portfolio_set = [30,15,7,3]
+date_obj_list = date_obj_list[int(len(date_obj_list)/2):int(len(date_obj_list)/2)+30]
+print(date_obj_list)
 
-for p_s in portfolio_set:
-	PORTFOLIO_SIZE = p_s
-	for date_obj in date_obj_list:
-		counter += 1
-		print(date_obj,"percent:",counter/n_sum,"   counter:",counter)
-		new_data = train_data_price[(train_data_price['Date']>=date_obj[0][0]) & (train_data_price['Date']<=date_obj[0][1])]
-		new_data['Target'] = new_data.groupby(['SecuritiesCode'])['Target'].apply(lambda x: x.fillna(x.mean()))
-		test_matrix = []
-		new_info = pd.DataFrame(new_data.groupby(['SecuritiesCode'])['Target'])
-		scode_list = list(new_info[0].values)
-		new_info = list(new_info[1])
-		for obj in new_info:
-			test_matrix.append(np.array(obj.values))
-		a_list,b_list = get_the_best_portfolio(test_matrix,scode_list)
-		temp_pd = pd.DataFrame()
-		temp_pd['SecuritiesCode'] = (a_list+b_list)
-		temp_pd[f'lag_rank_{PORTFOLIO_SIZE}'] = (up_num_list+down_num_list)
-		temp_pd['Date'] = date_obj[1]
-		final_df = pd.concat([final_df,temp_pd],ignore_index=True)
-		if counter % 10 == 0:
-			final_df.to_csv(f'kaggle_data/JPX/tool_data/rank_lag_{PORTFOLIO_SIZE}.csv')
-			print(f'kaggle_data/JPX/tool_data/rank_lag_{PORTFOLIO_SIZE}.csv在',"counter为",counter,"时存储了一次")
+for date_obj in date_obj_list:
+    counter += 1
+    print(date_obj,"percent:",counter/n_sum,"   counter:",counter)
+    new_data = train_data_price[(train_data_price['Date']>=date_obj[0][0]) & (train_data_price['Date']<=date_obj[0][1])]
+    new_data['Target'] = new_data.groupby(['SecuritiesCode'])['Target'].apply(lambda x: x.fillna(x.mean()))
+    test_matrix = []
+    new_info = pd.DataFrame(new_data.groupby(['SecuritiesCode'])['Target'])
+    scode_list = list(new_info[0].values)
+    new_info = list(new_info[1])
+    for obj in new_info:
+        test_matrix.append(np.array(obj.values))
+    a_list,b_list = get_the_best_portfolio(test_matrix,scode_list)
+    temp_pd = pd.DataFrame()
+    temp_pd['SecuritiesCode'] = (a_list+b_list)
+    temp_pd[f'lag_rank_{PORTFOLIO_SIZE}'] = (up_num_list+down_num_list)
+    temp_pd['Date'] = date_obj[1]
+    final_df = pd.concat([final_df,temp_pd],ignore_index=True)
+    if counter % 10 == 0:
+        final_df.to_csv(f'kaggle_data/JPX/tool_data/test_rank_lag_{PORTFOLIO_SIZE}_6.csv')
+        print(f'rank_lag_{PORTFOLIO_SIZE}.csv在',"counter为",counter,"时存储了一次")
+
+
+# new_data = train_data_price[(train_data_price['Date']>=date_obj[0][0]) & (train_data_price['Date']<=date_obj[0][1])]
+# new_data['Target'] = new_data.groupby(['SecuritiesCode'])['Target'].apply(lambda x: x.fillna(x.mean()))
+# test_matrix = []
+# new_info = pd.DataFrame(new_data.groupby(['SecuritiesCode'])['Target'])
+# scode_list = list(new_info[0].values)
+# new_info = list(new_info[1])
+# for obj in new_info:
+#     test_matrix.append(np.array(obj.values))
+# a_list,b_list,info_list = get_the_best_portfolio(test_matrix,scode_list)
+# temp_pd = pd.DataFrame()
+# temp_pd['SecuritiesCode'] = (a_list+b_list)
+# temp_pd[f'lag_rank_{PORTFOLIO_SIZE}'] = (up_num_list+down_num_list)
+# temp_pd['Date'] = date_obj[1]
+# final_df = pd.concat([final_df,temp_pd],ignore_index=True)
+
+
+
+
+
+
+
+# print(final_df)
+
+# tool_set = []
+# for i in range(len(info_list[0])):
+#     tool_set.append(i)
+
+# plt.plot(tool_set,info_list[0])
+# plt.show()
+# plt.plot(tool_set[10:],info_list[1][10:])
+# plt.show()
+# plt.plot(tool_set[10:],info_list[2][10:])
+# plt.show()

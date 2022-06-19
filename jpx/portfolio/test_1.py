@@ -75,7 +75,7 @@ train_data_price['Signal'] = train_data_price.groupby(['SecuritiesCode'])['Targe
 train_data_price = train_data_price[train_data_price['Signal'] == 1202]
 
 date_list = train_data_price['Date'].unique()
-train_data_price = train_data_price[train_data_price['Date']>'2020-12-01']
+train_data_price = train_data_price[train_data_price['Date']>'2021-10-01']
 
 test_matrix = []
 new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
@@ -83,7 +83,10 @@ scode_list = list(new_info[0].values)
 new_info = list(new_info[1])
 for obj in new_info:
     test_matrix.append(np.array(obj.values))
-print(get_the_best_portfolio(test_matrix,scode_list))
+print(len(test_matrix[0]))
+
+# get_the_best_portfolio(test_matrix,scode_list)
+# print(len(train_data_price['Date'].unique()))
 
 
 
