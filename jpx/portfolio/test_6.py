@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
-PORTFOLIO_SIZE = 30 #指定排名组合计算的是多少天前的组合
+PORTFOLIO_SIZE = 7 #指定排名组合计算的是多少天前的组合
 
 # 投资组合权重
 toprank_weight_ratio = 2
@@ -31,7 +31,7 @@ train_data_price = pd.merge(new_data_frame,train_data_price,on=['SecuritiesCode'
 train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
 
 def cal_sharp_ratio(list_):
-    return list_.mean()/(list_.std()+0.002)
+    return list_.mean()/(list_.std()+0.0001)
 
 def get_best_part(original_list,original_weight,new_weight,matrix,signal_list,positive_nagetive):
     max_sharp = -99999
@@ -112,7 +112,7 @@ counter = 0
 final_df = pd.DataFrame(columns=['SecuritiesCode',f'lag_rank_{PORTFOLIO_SIZE}','Date'])
 
 
-date_obj_list = date_obj_list[int(len(date_obj_list)/2):int(len(date_obj_list)/2)+30]
+date_obj_list = date_obj_list[int(len(date_obj_list)/2+170):int(len(date_obj_list)/2)+200]
 print(date_obj_list)
 
 for date_obj in date_obj_list:
@@ -133,7 +133,7 @@ for date_obj in date_obj_list:
     temp_pd['Date'] = date_obj[1]
     final_df = pd.concat([final_df,temp_pd],ignore_index=True)
     if counter % 10 == 0:
-        final_df.to_csv(f'kaggle_data/JPX/tool_data/test_rank_lag_{PORTFOLIO_SIZE}_6.csv')
+        final_df.to_csv(f'kaggle_data/JPX/tool_data/test_rank_lag_{PORTFOLIO_SIZE}_7.csv')
         print(f'rank_lag_{PORTFOLIO_SIZE}.csv在',"counter为",counter,"时存储了一次")
 
 

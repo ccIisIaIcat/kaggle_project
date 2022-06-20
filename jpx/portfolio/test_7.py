@@ -16,12 +16,12 @@ def calc_spread_return_sharpe(df: pd.DataFrame, portfolio_size=200, toprank_weig
     return sharpe_ratio, buf
 
 def add_rank(df):
-    df["Rank"] = df.groupby("Date")["lag_rank_30"].rank(ascending=False, method="first") - 1 
+    df["Rank"] = df.groupby("Date")["lag_rank_7"].rank(ascending=False, method="first") - 1 
     df["Rank"] = df["Rank"].astype("int")
     return df
 
-info_data = pd.read_csv('kaggle_data/JPX/tool_data/test_rank_lag_30_6.csv')
-info_data = info_data[['SecuritiesCode','lag_rank_30','Date']]
+info_data = pd.read_csv('kaggle_data/JPX/tool_data/test_rank_lag_7_7.csv')
+info_data = info_data[['SecuritiesCode','lag_rank_7','Date']]
 train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
 train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
 train_data_price = pd.merge(info_data,train_data_price,on=['Date','SecuritiesCode'],how='left')
