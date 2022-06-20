@@ -1,3 +1,4 @@
+from turtle import up
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,6 +32,24 @@ scode_list = list(new_info[0].values)
 new_info = list(new_info[1])
 for obj in new_info:
     test_matrix.append(np.array(obj.values))
+
+def add_rank(df):
+    df["Rank"] = df.groupby("Date")['lag_rank'].rank(ascending=False, method="first") - 1 
+    df["Rank"] = df["Rank"].astype("int")
+    return df
+
+def calc_spread_return_per_day(df, portfolio_size=200, toprank_weight_ratio=2):
+    assert df['Rank'].min() == 0
+    assert df['Rank'].max() == len(df['Rank']) - 1
+    weights = np.linspace(start=toprank_weight_ratio, stop=1, num=portfolio_size)
+    purchase = (df.sort_values(by='Rank')['Target'][:portfolio_size] * weights).sum() / weights.mean()
+    short = (df.sort_values(by='Rank', ascending=False)['Target'][:portfolio_size] * weights).sum() / weights.mean()
+    return purchase - short
+
+def calc_spread_return_sharpe(df: pd.DataFrame, portfolio_size=200, toprank_weight_ratio=2):
+    buf = df.groupby('Date').apply(calc_spread_return_per_day, portfolio_size, toprank_weight_ratio)
+    sharpe_ratio = buf.mean() / buf.std()
+    return sharpe_ratio, buf
 
 #定义一个'和相关系数'
 def combine_ratio(list_1,list_2):
@@ -142,13 +161,26 @@ def get_the_best_portfolio(value_list,combine_matrix,scode_list,portfolio_size,k
 combine_matrix = combine_ratio_matrix(test_matrix)
 earning_list = np.sum(test_matrix,axis=1)
 
-new_test = combine_matrix[0]*10
-plt.hist(earning_list,bins=100)
-plt.hist(new_test,bins=100)
-plt.show()
+up_num_list = []
+down_num_list = []
+
+for i in range(200):
+    up_num_list.append(200-i)
+    down_num_list.append(i-200)
 
 
-print(get_the_best_portfolio(value_list=earning_list,combine_matrix=combine_matrix,scode_list=scode_list,portfolio_size=200,k_value=10))
+train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
+train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
+for k_ in [10,20,30,40,50,100,150,200]:
+    get_the_best_portfolio(value_list=earning_list,combine_matrix=combine_matrix,scode_list=scode_list,portfolio_size=200,k_value=10)
+    a_list,b_list = get_the_best_portfolio(value_list=earning_list,combine_matrix=combine_matrix,scode_list=scode_list,portfolio_size=200,k_value=k_)
+    temp_pd = pd.DataFrame()
+    temp_pd['SecuritiesCode'] = (a_list+b_list)
+    temp_pd['lag_rank'] = (up_num_list+down_num_list)
+    train_data_price = pd.merge(train_data_price,temp_pd,on=['SecuritiesCode'],how='left')
+    add_rank(train_data_price)
+    print(calc_spread_return_sharpe(train_data_price)[0])
+
 
 
     
