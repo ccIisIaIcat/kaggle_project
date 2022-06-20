@@ -1,4 +1,3 @@
-from cmath import nan
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,13 +25,12 @@ train_data_price = train_data_price[(train_data_price['Date']>='2020-06-01') & (
 
 test_matrix = []
 train_data_price['Target'] = train_data_price.groupby(['SecuritiesCode'])['Target'].apply(lambda x: x.fillna(x.mean()))
-train_data_price.dropna(axis=0,inplace=True)
 new_info = pd.DataFrame(train_data_price.groupby(['SecuritiesCode'])['Target'])
+new_info.dropna(axis=1,inplace=True)
 scode_list = list(new_info[0].values)
 new_info = list(new_info[1])
 for obj in new_info:
     test_matrix.append(np.array(obj.values))
-
 
 #定义一个'和相关系数'
 def combine_ratio(list_1,list_2):
@@ -64,8 +62,6 @@ def combine_ratio_weight(list_1,list_2,weight_1,weight_2):
 # 可以先进行第二步工作
 # 先看看分布的大体量纲(根据计算结果k取100左右比较合适，但有可能是由收益中的极端值引起的)
 
-
-
 def get_best_friend(value_list,sum_corr_list,k,self_id):
     max = -9999999
     max_id = -1
@@ -76,58 +72,83 @@ def get_best_friend(value_list,sum_corr_list,k,self_id):
             max_id = i
     return max_id
 
-def get_best_friend(value_list,sum_corr_list,k,self_id):
+def get_best_friend(value_list,sum_corr_list,k,self_id,signal_list):
     max = -9999999
     max_id = -1
     for i in range(len(value_list)):
         temp_value = value_list[i]-sum_corr_list[i]*k
-        if temp_value>max and i!=self_id:
+        if temp_value>max and i!=self_id and signal_list[i]==0:
             max = temp_value
             max_id = i
     return max_id
 
-def get_worst_friend(value_list,sum_corr_list,k,self_id):
+def get_worst_friend(value_list,sum_corr_list,k,self_id,signal_list):
     max = -9999999
     max_id = -1
     for i in range(len(value_list)):
         temp_value = -value_list[i]-sum_corr_list[i]*k
-        if temp_value>max and i!=self_id:
+        if temp_value>max and i!=self_id and signal_list[i]==0:
             max = temp_value
             max_id = i
     return max_id
 
+def get_best_id(value_list,signal_list):
+    max = -99999
+    best_id = -1
+    for i in range(len(value_list)):
+        if value_list[i]>max and signal_list[i]==0:
+            max = value_list[i]
+            best_id = i
+    return best_id
+
+def get_worst_id(value_list,signal_list):
+    min = 99999
+    worst_id = -1
+    for i in range(len(value_list)):
+        if value_list[i]<min and signal_list[i]==0:
+            min = value_list[i]
+            worst_id = i
+    return worst_id
+
+
+def get_the_best_portfolio(value_list,combine_matrix,scode_list,portfolio_size,k_value):
+    signal_list = np.zeros(len(value_list))
+    id_list_up = np.zeros(portfolio_size)
+    id_list_down = np.zeros(portfolio_size)
+    for i in range(portfolio_size*2):
+        print(i)
+        if i%2 == 0:
+            id_now = i // 2
+            best_id = get_best_id(value_list=value_list,signal_list=signal_list)
+            signal_list[best_id] = 1
+            max_id = get_best_friend(value_list=value_list,sum_corr_list=combine_matrix[best_id],k=k_value,self_id=best_id,signal_list=signal_list)
+            signal_list[max_id] = 1
+            id_list_up[id_now] = max_id
+        else:
+            id_now = i // 2
+            worst_id = get_worst_id(value_list=value_list,signal_list=signal_list)
+            signal_list[worst_id] = -1
+            max_id = get_worst_friend(value_list=value_list,sum_corr_list=combine_matrix[worst_id],k=k_value,self_id=worst_id,signal_list=signal_list)
+            signal_list[max_id] = -1
+            id_list_down[id_now] = max_id
+    up_list = []
+    down_list = []
+    for num_1 in id_list_up:
+        up_list.append(scode_list[int(num_1)])
+    for num_2 in id_list_down:
+        down_list.append(scode_list[int(num_2)])
+    return up_list,down_list
 
 combine_matrix = combine_ratio_matrix(test_matrix)
 earning_list = np.sum(test_matrix,axis=1)
-plt.hist(combine_matrix,bins=150)
-plt.show()
-plt.hist(earning_list,bins=150)
-plt.show()
-plt.hist(combine_matrix,bins=150)
-plt.hist(earning_list,bins=150)
+
+new_test = combine_matrix[0]*10
+plt.hist(earning_list,bins=100)
+plt.hist(new_test,bins=100)
 plt.show()
 
-id_this = 0
-for id_this in [0,1,2,3]:
-    k_list = []
-    for j in range(600):
-        k_list.append(70+j*0.01)
-    new_sharp_set = []
-    tool_set = []
-    i = 0
-    for k_ in k_list:
-        i+=1
-        tool_set.append(i)
-        temp_friend_id = get_best_friend(earning_list,combine_matrix[id_this],k_,0)
-        print(temp_friend_id)
-        print(earning_list[temp_friend_id],combine_matrix[id_this][temp_friend_id])
-        new_list = (test_matrix[temp_friend_id]+test_matrix[id_this])/2
-        new_sharp_set.append(new_list.mean()/new_list.std())
-    plt.plot(tool_set,new_sharp_set)
-    plt.show()
 
-
-
+print(get_the_best_portfolio(value_list=earning_list,combine_matrix=combine_matrix,scode_list=scode_list,portfolio_size=200,k_value=10))
 
 
     
