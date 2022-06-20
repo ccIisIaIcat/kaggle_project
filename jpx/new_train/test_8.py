@@ -6,7 +6,7 @@ from sklearn import preprocessing
 
 LAG_LIST = [1,3,7,30] #lag信息序列
 K_FOLDS = 15 #测试集个数
-OVERLAP_RATIO = 0.3 #cv测试集覆盖比率
+OVERLAP_RATIO = 0.2 #cv测试集覆盖比率
 TEST_DATA_RATIO = 0.2 #每组中测试集所占比例
 PORTFOLIO_SIZE = 30
 seed0 = 8586 #随机种子
