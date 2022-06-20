@@ -32,7 +32,6 @@ scode_list = list(new_info[0].values)
 new_info = list(new_info[1])
 for obj in new_info:
     test_matrix.append(np.array(obj.values))
-print(test_matrix[3])
 
 
 #定义一个'和相关系数'
@@ -98,30 +97,35 @@ def get_worst_friend(value_list,sum_corr_list,k,self_id):
     return max_id
 
 
-# combine_matrix = combine_ratio_matrix(test_matrix)
-# earning_list = np.sum(test_matrix,axis=1)
+combine_matrix = combine_ratio_matrix(test_matrix)
+earning_list = np.sum(test_matrix,axis=1)
+plt.hist(combine_matrix,bins=150)
+plt.show()
+plt.hist(earning_list,bins=150)
+plt.show()
+plt.hist(combine_matrix,bins=150)
+plt.hist(earning_list,bins=150)
+plt.show()
 
-# id_this = 0
-# for id_this in [0,1,2,3]:
-#     k_list = []
-#     for j in range(600):
-#         k_list.append(70+j*0.01)
-#     new_sharp_set = []
-#     tool_set = []
-#     i = 0
-#     for k_ in k_list:
-#         i+=1
-#         tool_set.append(i)
-#         temp_friend_id = get_best_friend(earning_list,combine_matrix[id_this],k_,0)
-#         print(temp_friend_id)
-#         print(earning_list[temp_friend_id],combine_matrix[id_this][temp_friend_id])
-#         new_list = (test_matrix[temp_friend_id]+test_matrix[id_this])/2
-#         new_sharp_set.append(new_list.mean()/new_list.std())
-#     print(earning_list)
-#     print(combine_matrix[id_this])
-#     plt.plot(tool_set,new_sharp_set)
-#     plt.show()
-# print(combine_matrix[3])
+id_this = 0
+for id_this in [0,1,2,3]:
+    k_list = []
+    for j in range(600):
+        k_list.append(70+j*0.01)
+    new_sharp_set = []
+    tool_set = []
+    i = 0
+    for k_ in k_list:
+        i+=1
+        tool_set.append(i)
+        temp_friend_id = get_best_friend(earning_list,combine_matrix[id_this],k_,0)
+        print(temp_friend_id)
+        print(earning_list[temp_friend_id],combine_matrix[id_this][temp_friend_id])
+        new_list = (test_matrix[temp_friend_id]+test_matrix[id_this])/2
+        new_sharp_set.append(new_list.mean()/new_list.std())
+    plt.plot(tool_set,new_sharp_set)
+    plt.show()
+
 
 
 
