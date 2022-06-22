@@ -38,6 +38,11 @@ def add_rank(df):
     df["Rank"] = df["Rank"].astype("int")
     return df
 
+def add_rank_2(df):
+    df["Rank"] = df.groupby("Date")['Target'].rank(ascending=False, method="first") - 1 
+    df["Rank"] = df["Rank"].astype("int")
+    return df
+
 def calc_spread_return_per_day(df, portfolio_size=200, toprank_weight_ratio=2):
     assert df['Rank'].min() == 0
     assert df['Rank'].max() == len(df['Rank']) - 1
@@ -170,16 +175,31 @@ for i in range(200):
 
 
 train_data_price = pd.read_csv('kaggle_data/JPX/train_files/stock_prices.csv')
-train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
-for k_ in [10,20,30,40,50,100,150,200]:
-    get_the_best_portfolio(value_list=earning_list,combine_matrix=combine_matrix,scode_list=scode_list,portfolio_size=200,k_value=10)
+tool_set = []
+sharp_set = []
+value_set = []
+i = 0
+for k_ in [0.1,0.12,0.14,0.16,0.18,0.2,0.22,0.24,0.26,0.28,0.3,0.32,0.34,0.36,0.38,0.4]:
+    tool_set.append(i)
+    i += 1
+    train_data_price = train_data_price[['Date','SecuritiesCode','Target']]
     a_list,b_list = get_the_best_portfolio(value_list=earning_list,combine_matrix=combine_matrix,scode_list=scode_list,portfolio_size=200,k_value=k_)
     temp_pd = pd.DataFrame()
     temp_pd['SecuritiesCode'] = (a_list+b_list)
     temp_pd['lag_rank'] = (up_num_list+down_num_list)
     train_data_price = pd.merge(train_data_price,temp_pd,on=['SecuritiesCode'],how='left')
+    train_data_price['lag_rank'] = train_data_price['lag_rank'].fillna(0)
+    print(train_data_price)
+    print(list(train_data_price))
     add_rank(train_data_price)
-    print(calc_spread_return_sharpe(train_data_price)[0])
+    sha_ = calc_spread_return_sharpe(train_data_price)[0]
+    sharp_set.append(sha_)
+    print(sha_)
+    add_rank_2(train_data_price)
+    sha_ = calc_spread_return_sharpe(train_data_price)[0]
+
+plt.plot(tool_set,sharp_set)
+plt.show()
 
 
 
