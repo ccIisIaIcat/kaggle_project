@@ -13,13 +13,13 @@ class MCMC:
         self.samples = []
 
     def p(self, x):  # 假设f1为我们想要进行抽样的分布
-        return 0.3/np.sqrt(np.pi*2)*np.exp(-(x+2)**2/2) + 0.7/np.sqrt(np.pi*2)*np.exp(-(x-4)**2/2)
+        return 0.3/np.sqrt(np.pi*2)*np.exp(-(x+2)**2/2) + 0.3/np.sqrt(np.pi*2)*np.exp(-(x-4)**2/2) + + 0.4/np.sqrt(np.pi*2)*np.exp(-(x-12)**2/2)
 
     def q(self, m, x):
         return 1/np.sqrt(2*np.pi)*np.exp(-(x-m)**2/2)
 
     def plot(self):
-        x = np.arange(-10, 10, 0.01)
+        x = np.arange(-10, 15, 0.01)
         plt.plot(x, self.p(x), linewidth=3)
 
     def sampling(self):
@@ -42,7 +42,7 @@ class MCMC:
         plt.show()
 
 
-M = MCMC(10000, 500000)
+M = MCMC(50000, 50000)
 M.sampling()
 M.plot()
 M.test()
