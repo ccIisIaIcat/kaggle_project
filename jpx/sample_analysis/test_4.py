@@ -42,7 +42,7 @@ class MCMC:
         plt.show()
 
 
-M = MCMC(50000, 50000)
+M = MCMC(60000, 50000)
 M.sampling()
 M.plot()
 M.test()
