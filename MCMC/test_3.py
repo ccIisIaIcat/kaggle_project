@@ -46,4 +46,3 @@ M = MCMC(400000, 150000)
 M.sampling()
 M.plot()
 M.test()
-
