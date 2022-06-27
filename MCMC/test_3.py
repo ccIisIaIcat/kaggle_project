@@ -9,7 +9,7 @@ class MCMC:
     def __init__(self, m, n):
         self.m = m
         self.n = n
-        self.x = 10
+        self.x = 0
         self.samples = []
 
     def p(self, x):  # 假设f1为我们想要进行抽样的分布
